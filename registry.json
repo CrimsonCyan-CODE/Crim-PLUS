@@ -1,0 +1,12 @@
+{
+  "packages": {
+    "mathtools": {
+      "version": "1.0",
+      "url": "https://raw.githubusercontent.com/CrimsonCyan-CODE/Crim-PLUS/main/modules/mathtools.rose"
+    },
+    "texttools": {
+      "version": "1.0",
+      "url": "https://raw.githubusercontent.com/CrimsonCyan-CODE/Crim-PLUS/main/modules/texttools.rose"
+    }
+  }
+}
