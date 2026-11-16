@@ -1,4 +1,8 @@
-# Crim+
+<p align="center">
+  <img src="crimgif.gif" width="200" alt="Crim+ logo">
+</p>
+
+# Crim+!
 
 (NOTE: I do know that the files all have different versions. Github is 1.4, Previous python interpreters are 0.2.4 or somethin and the setup installer says 0.27, this will be fixed soon!!!)
 
