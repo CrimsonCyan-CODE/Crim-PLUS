@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="crimgif.gif" width="200" alt="Crim+ logo">
+  <img src="crimgif.gif" width="200" alt="Crim+ logo"> <--- Crimson, Crim+'s Mascot! :)
 </p>
 
 # Crim+!
