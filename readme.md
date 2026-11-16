@@ -1,5 +1,5 @@
 # Crim+
-
+(NOTE: I do know that the files all have different versions. Github is 1.4, Previous python interpreters are 0.2.4 or somethin and the setup installer says 0.27, this will be fixed soon!!!)
 **Crim+** is a custom, English-like scripting language and 2D game engine built in Python using Pygame. It was designed to make coding games as easy as writing a story,
 and to bridge the large gap between Python and Scratch to make text-based coding more accessible to young children that have learnt Scratch.
 
