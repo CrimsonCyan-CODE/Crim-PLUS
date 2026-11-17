@@ -9,16 +9,20 @@
       "url": "https://raw.githubusercontent.com/CrimsonCyan-CODE/Crim-PLUS/main/modules/texttools.rose"
     },
     "ui": {
-      "version": "1.0",
+      "version": "1.1",
       "url": "https://raw.githubusercontent.com/CrimsonCyan-CODE/Crim-PLUS/main/modules/ui.rose"
     },
     "colors": {
-      "version": "1.0",
+      "version": "1.1",
       "url": "https://raw.githubusercontent.com/CrimsonCyan-CODE/Crim-PLUS/main/modules/colors.rose"
     },
     "json": {
-      "version": "1.0",
+      "version": "1.5.2",
       "url": "https://raw.githubusercontent.com/CrimsonCyan-CODE/Crim-PLUS/main/modules/json.rose"
+    },
+    "physics": {
+      "version": "1.6",
+      "url": "https://raw.githubusercontent.com/CrimsonCyan-CODE/Crim-PLUS/main/modules/physics.rose"
     },
   }
 }
