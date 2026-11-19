@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crim-PLUS (Crim+) – Plain-English Game Programming Language</title>
+  <meta name="description" content="Crim-PLUS (Crim+) is a plain-English programming language for 2D games, tilemaps, particles, tweens, and clean logic—complete with an interactive playground, Rose package manager, and VS Code support." />
+  <meta name="keywords" content="Crim-PLUS, Crim+, CrimsonCyan-CODE, programming language, game development, beginner coding, Rose package manager, CDSL" />
+  <style>
+    :root {
+      --bg-dark: #060507;
+      --bg-card: rgba(20, 11, 15, 0.78);
+      --border-subtle: rgba(255, 34, 71, 0.24);
+      --border-bright: rgba(255, 58, 92, 0.72);
+      --crimson: #ff1e42;
+      --crimson-deep: #99001b;
+      --ember: #ff6238;
+      --text-main: #f6f2f4;
+      --text-muted: #a6979e;
+      --code-bg: #0b080a;
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      line-height: 1.6;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 50% -10%, rgba(255, 30, 66, 0.28), transparent 55%),
+        radial-gradient(circle at 85% 60%, rgba(153, 0, 27, 0.2), transparent 45%),
+        linear-gradient(rgba(255, 30, 66, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 30, 66, 0.045) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 44px 44px, 44px 44px;
+      z-index: -2;
+      pointer-events: none;
+    }
+
+    .glow-orb {
+      position: fixed;
+      width: 520px;
+      height: 520px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 30, 66, 0.16) 0%, transparent 70%);
+      filter: blur(42px);
+      top: 18%;
+      left: -140px;
+      z-index: -1;
+      animation: floatOrb 12s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(140px, 90px) scale(1.15); }
+    }
+
+    /* Scroll Reveal & Floating Shapes */
+    .reveal-shape {
+      opacity: 0;
+      transform: translateY(48px) scale(0.96);
+      transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .reveal-shape.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .type-on-scroll {
+      min-height: 1.2em;
+    }
+
+    .typing-caret::after {
+      content: "▋";
+      color: var(--crimson);
+      margin-left: 3px;
+      animation: blinkCaret 0.75s step-end infinite;
+    }
+
+    @keyframes blinkCaret {
+      50% { opacity: 0; }
+    }
+
+    /* Navbar */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(14px);
+      background: rgba(6, 5, 7, 0.84);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .nav-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-weight: 900;
+      font-size: 1.4rem;
+      letter-spacing: -0.03em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+
+    .logo span {
+      background: linear-gradient(135deg, #ff1e42, #ff6b4a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .badge-version {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 0.18rem 0.5rem;
+      border-radius: 999px;
+      background: rgba(255, 30, 66, 0.14);
+      border: 1px solid var(--border-subtle);
+      color: #ff6b81;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.92rem;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--text-main); }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.8rem 1.45rem;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.94rem;
+      text-decoration: none;
+      transition: all 0.25s ease;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--crimson), var(--crimson-deep));
+      color: #fff;
+      box-shadow: 0 0 25px rgba(255, 30, 66, 0.42);
+      border: 1px solid rgba(255, 110, 130, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 32px rgba(255, 30, 66, 0.68);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--border-bright);
+      background: rgba(255, 30, 66, 0.12);
+      transform: translateY(-2px);
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    /* Hero */
+    .hero {
+      padding: 5.5rem 0 3.5rem;
+      text-align: center;
+    }
+
+    .hero-pill {
+      display: inline-block;
+      padding: 0.35rem 0.95rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #ff8095;
+      background: rgba(255, 30, 66, 0.12);
+      border: 1px solid var(--border-subtle);
+      margin-bottom: 1.35rem;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.7rem, 6vw, 4.5rem);
+      font-weight: 900;
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+      margin-bottom: 1.2rem;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #ffffff 20%, #ff2a4b 65%, #ff7340 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      max-width: 650px;
+      margin: 0 auto 2.1rem;
+      font-size: 1.12rem;
+      color: var(--text-muted);
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* Interactive Playground */
+    .playground-wrap {
+      margin: 3.5rem auto 1rem;
+      background: var(--code-bg);
+      border-radius: 18px;
+      border: 1px solid var(--border-bright);
+      box-shadow: 0 25px 75px rgba(0, 0, 0, 0.9), 0 0 45px rgba(255, 30, 66, 0.16);
+      overflow: hidden;
+      text-align: left;
+    }
+
+    .pg-header {
+      background: linear-gradient(90deg, #1a0d12, #0e090c);
+      padding: 0.8rem 1.1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-subtle);
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .window-dots {
+      display: flex;
+      gap: 0.45rem;
+      align-items: center;
+    }
+
+    .dot { width: 11px; height: 11px; border-radius: 50%; }
+    .dot.red { background: #ff1e42; box-shadow: 0 0 8px #ff1e42; }
+    .dot.amber { background: #ff9f1c; }
+    .dot.gray { background: #3b3236; }
+
+    .pg-presets {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .preset-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .preset-btn:hover, .preset-btn.active {
+      background: rgba(255, 30, 66, 0.2);
+      border-color: var(--border-bright);
+      color: #fff;
+    }
+
+    .pg-body {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      min-height: 340px;
+    }
+
+    @media (max-width: 820px) {
+      .pg-body { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+    }
+
+    .pg-editor-pane {
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .pg-pane-label {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      padding: 0.55rem 1rem;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid rgba(255, 34, 71, 0.14);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    textarea#crim-editor {
+      width: 100%;
+      flex: 1;
+      min-height: 270px;
+      background: transparent;
+      border: none;
+      outline: none;
+      resize: vertical;
+      padding: 1.1rem;
+      color: #f4eaee;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      tab-size: 4;
+    }
+
+    .pg-output-pane {
+      display: flex;
+      flex-direction: column;
+      background: #080607;
+    }
+
+    #pg-canvas-wrap {
+      display: none;
+      padding: 0.75rem;
+      border-bottom: 1px solid rgba(255, 34, 71, 0.16);
+      background: #050405;
+      text-align: center;
+    }
+
+    #pg-canvas {
+      max-width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      background: #14101c;
+    }
+
+    #pg-console {
+      flex: 1;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.86rem;
+      line-height: 1.6;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      color: #d9ccd2;
+      max-height: 310px;
+    }
+
+    .log-err { color: #ff4d6d; font-weight: 600; }
+    .log-sys { color: #7a6870; font-style: italic; }
+
+    /* Sections */
+    .section { padding: 4.5rem 0; }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .section-title h2 {
+      font-size: clamp(2rem, 4vw, 2.75rem);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.6rem;
+    }
+
+    .section-title p {
+      color: var(--text-muted);
+      max-width: 580px;
+      margin: 0 auto;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 1.75rem;
+      backdrop-filter: blur(10px);
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: var(--border-bright);
+      box-shadow: 0 12px 35px rgba(255, 30, 66, 0.16);
+    }
+
+    .card-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 1.05rem;
+      background: linear-gradient(135deg, rgba(255, 30, 66, 0.25), rgba(153, 0, 27, 0.15));
+      border: 1px solid var(--border-bright);
+      color: #ff4d6d;
+      margin-bottom: 1.1rem;
+    }
+
+    .card h3 { font-size: 1.18rem; margin-bottom: 0.5rem; }
+    .card p { color: var(--text-muted); font-size: 0.94rem; }
+    .card code {
+      font-family: var(--font-mono);
+      font-size: 0.84rem;
+      color: #ff8fa3;
+      background: rgba(255, 30, 66, 0.1);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+    }
+
+    /* Chess Showcase */
+    .showcase-box {
+      background: linear-gradient(135deg, rgba(28, 10, 16, 0.92), rgba(11, 7, 10, 0.96));
+      border: 1px solid var(--border-bright);
+      border-radius: 20px;
+      padding: 2.5rem;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 2.5rem;
+      align-items: center;
+      box-shadow: 0 20px 60px rgba(255, 30, 66, 0.15);
+    }
+
+    @media (max-width: 820px) {
+      .showcase-box { grid-template-columns: 1fr; }
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 1.25rem 0 1.75rem;
+    }
+
+    .tag {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      background: rgba(255, 30, 66, 0.12);
+      border: 1px solid var(--border-subtle);
+      color: #ff8fa3;
+    }
+
+    .mini-board {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      aspect-ratio: 1;
+      max-width: 300px;
+      margin: 0 auto;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid var(--border-bright);
+      box-shadow: 0 0 35px rgba(255, 30, 66, 0.28);
+    }
+
+    .sq {
+      display: grid;
+      place-items: center;
+      font-size: 1.25rem;
+      user-select: none;
+    }
+    .sq.light { background: #2b1d24; color: #f5f2f4; }
+    .sq.dark { background: #120b0f; color: #ff4d6d; }
+    .sq.highlight { background: rgba(255, 30, 66, 0.48); }
+
+    /* Quickstart */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .step {
+      background: var(--code-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 1.5rem;
+    }
+
+    .step-num {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--crimson);
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+
+    .step code {
+      display: block;
+      margin-top: 0.75rem;
+      padding: 0.65rem 0.85rem;
+      background: #140d11;
+      border: 1px solid rgba(255, 30, 66, 0.2);
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #ff8fa3;
+    }
+
+    footer {
+      border-top: 1px solid var(--border-subtle);
+      padding: 2.5rem 0;
+      margin-top: 4rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    footer a { color: #ff5c77; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="glow-orb"></div>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="#" class="logo">
+        Crim<span>-PLUS</span>
+        <span class="badge-version">v1.5.0</span>
+      </a>
+      <div class="nav-links">
+        <a href="#playground">Playground</a>
+        <a href="#features">Features</a>
+        <a href="#chess">Built in Crim+</a>
+        <a href="#quickstart">Quickstart</a>
+        <a href="https://github.com/CrimsonCyan-CODE/Crim-PLUS" target="_blank" rel="noopener">GitHub ↗</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <section class="hero">
+      <div class="hero-pill">Plain-English Game &amp; Logic Programming</div>
+      <h1>Write games the way<br><span class="gradient-text">you actually think.</span></h1>
+      <p>
+        <strong>Crim-PLUS (Crim+)</strong> removes curly braces, semicolons, and cryptic boilerplate.
+        Build 2D games with tilemaps, particles, tweens, custom data files, and readable logic that feels like giving direct instructions.
+      </p>
+      <div class="hero-actions">
+        <a href="https://github.com/CrimsonCyan-CODE/Crim-PLUS/releases/latest" target="_blank" rel="noopener" class="btn btn-primary">
+          Download Windows Setup Wizard
+        </a>
+        <a href="https://github.com/CrimsonCyan-CODE/Crim-PLUS" target="_blank" rel="noopener" class="btn btn-secondary">
+          View Source on GitHub
+        </a>
+      </div>
+
+      <!-- Interactive Crim+ Playground -->
+      <div id="playground" class="playground-wrap reveal-shape">
+        <div class="pg-header">
+          <div class="window-dots">
+            <span class="dot red"></span>
+            <span class="dot amber"></span>
+            <span class="dot gray"></span>
+          </div>
+          <div class="pg-presets">
+            <button class="preset-btn active" onclick="loadPreset('hello', this)">hello.crim</button>
+            <button class="preset-btn" onclick="loadPreset('fib', this)">fibonacci.crim</button>
+            <button class="preset-btn" onclick="loadPreset('shapes', this)">shapes.crim</button>
+          </div>
+          <button class="btn btn-primary" style="padding: 0.42rem 1rem; font-size: 0.84rem;" onclick="runCrimPlayground()">▶ Run Code</button>
+        </div>
+        <div class="pg-body">
+          <div class="pg-editor-pane">
+            <div class="pg-pane-label">
+              <span>Interactive Crim+ Editor</span>
+              <span style="color: #ff6b81;">Editable</span>
+            </div>
+            <textarea id="crim-editor" spellcheck="false"></textarea>
+          </div>
+          <div class="pg-output-pane">
+            <div class="pg-pane-label">
+              <span>Live Output</span>
+              <button onclick="clearOutput()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-family:var(--font-mono);font-size:0.74rem;">Clear</button>
+            </div>
+            <div id="pg-canvas-wrap">
+              <canvas id="pg-canvas" width="360" height="180"></canvas>
+            </div>
+            <div id="pg-console"><span class="log-sys">Click "▶ Run Code" to execute Crim+ right in your browser...</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="section">
+      <div class="section-title">
+        <h2 class="type-on-scroll" data-text="Batteries Included"></h2>
+        <p class="type-on-scroll" data-text="Everything you need to go from a blank script to a playable game without hunting for ten libraries."></p>
+      </div>
+      <div class="grid">
+        <div class="card reveal-shape">
+          <div class="card-icon">&gt;_</div>
+          <h3>Zero-Symbol Syntax</h3>
+          <p>Declare variables with <code>set x to 10</code>, branch with <code>if ... then do:</code>, and define reusable actions with <code>instruction to ...:</code>.</p>
+        </div>
+        <div class="card reveal-shape">
+          <div class="card-icon">[]</div>
+          <h3>Built-In Tilemaps &amp; Mouse</h3>
+          <p>Plug a grid directly into your display, place textures at <code>tile (x, y)</code>, and react to left, right, or middle clicks natively.</p>
+        </div>
+        <div class="card reveal-shape">
+          <div class="card-icon">~*</div>
+          <h3>Tweens &amp; Particles</h3>
+          <p>Smoothly animate movement with easing styles like <code>bounce out</code> or burst and stream custom particle emitters in one line.</p>
+        </div>
+        <div class="card reveal-shape">
+          <div class="card-icon">{}</div>
+          <h3>CDSL Data &amp; Levels</h3>
+          <p>Load structured game settings or entire tile-based levels from human-readable <code>.cdsl</code> files straight into your program.</p>
+        </div>
+        <div class="card reveal-shape">
+          <div class="card-icon">++</div>
+          <h3>Rose Package Manager</h3>
+          <p>Share and install reusable modules—complete with custom instructions, shapes, and event handlers—using <code>crim rose</code>.</p>
+        </div>
+        <div class="card reveal-shape">
+          <div class="card-icon">?!</div>
+          <h3>Human Error Messages</h3>
+          <p>No cryptic stack traces. Crim+ points to the exact line, suggests fixes for typos, and integrates directly with VS Code.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="chess" class="section">
+      <div class="showcase-box reveal-shape">
+        <div>
+          <div class="hero-pill" style="margin-bottom: 0.9rem;">Real Project Spotlight</div>
+          <h2 class="type-on-scroll" data-text="Full Chess Built in Crim+" style="font-size: 2rem; font-weight: 900; margin-bottom: 0.75rem;"></h2>
+          <p style="color: var(--text-muted);">
+            Using Crim-PLUS's tilemap engine, 64-square lists, and recursive check simulation, a complete playable chess rules engine runs natively in pure Crim+ code.
+          </p>
+          <div class="tag-list">
+            <span class="tag">Check &amp; Checkmate</span>
+            <span class="tag">Stalemate Detection</span>
+            <span class="tag">En Passant</span>
+            <span class="tag">Kingside &amp; Queenside Castling</span>
+            <span class="tag">Pawn Promotion</span>
+          </div>
+          <a href="https://github.com/CrimsonCyan-CODE/Crim-PLUS" target="_blank" rel="noopener" class="btn btn-primary">
+            Explore the Source Code
+          </a>
+        </div>
+        <div class="mini-board" aria-hidden="true" id="mini-chess"></div>
+      </div>
+    </section>
+
+    <section id="quickstart" class="section">
+      <div class="section-title">
+        <h2 class="type-on-scroll" data-text="Start Coding in 60 Seconds"></h2>
+        <p class="type-on-scroll" data-text="No Python setup or dependencies needed—just run the Windows installer and start building."></p>
+      </div>
+      <div class="steps">
+        <div class="step reveal-shape">
+          <div class="step-num">STEP 01</div>
+          <h3>Run the Setup Wizard</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Download the latest release and install Crim+ with one click.</p>
+          <code>Crim-PLUS-Setup.exe</code>
+        </div>
+        <div class="step reveal-shape">
+          <div class="step-num">STEP 02</div>
+          <h3>Write a .crim File</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Save your first plain-English script anywhere on your PC.</p>
+          <code>say "Hello, World!"</code>
+        </div>
+        <div class="step reveal-shape">
+          <div class="step-num">STEP 03</div>
+          <h3>Run It</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Launch your program or check it for syntax issues.</p>
+          <code>crim hello.crim</code>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>
+        Created by <a href="https://github.com/CrimsonCyan-CODE" target="_blank" rel="noopener">CrimsonCyan-CODE</a>
+        • <a href="https://github.com/CrimsonCyan-CODE/Crim-PLUS" target="_blank" rel="noopener">Crim-PLUS on GitHub</a>
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    /* -------------------- Scroll Reveal & Typewriter Animations -------------------- */
+    const shapeObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          shapeObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.14 });
+
+    document.querySelectorAll('.reveal-shape').forEach((el, idx) => {
+      el.style.transitionDelay = `${(idx % 3) * 90}ms`;
+      shapeObserver.observe(el);
+    });
+
+    const typeObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && !entry.target.dataset.typed) {
+          entry.target.dataset.typed = "true";
+          const fullText = entry.target.dataset.text || "";
+          entry.target.classList.add('typing-caret');
+          let i = 0;
+          const speed = fullText.length > 40 ? 16 : 28;
+          const timer = setInterval(() => {
+            entry.target.textContent = fullText.slice(0, ++i);
+            if (i >= fullText.length) {
+              clearInterval(timer);
+              setTimeout(() => entry.target.classList.remove('typing-caret'), 700);
+            }
+          }, speed);
+          typeObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.35 });
+
+    document.querySelectorAll('.type-on-scroll').forEach(el => typeObserver.observe(el));
+
+    /* -------------------- Mini Chessboard -------------------- */
+    const pieces = [
+      '♜','♞','♝','♛','♚','♝','♞','♜',
+      '♟','♟','♟','♟','♟','♟','♟','♟',
+      '','','','','','','','',
+      '','','','','','','','',
+      '','','','','♙','','','',
+      '','','','','','','','',
+      '♙','♙','♙','♙','','♙','♙','♙',
+      '♖','♘','♗','♕','♔','♗','♘','♖'
+    ];
+    const boardEl = document.getElementById('mini-chess');
+    pieces.forEach((p, idx) => {
+      const r = Math.floor(idx / 8), c = idx % 8;
+      const sq = document.createElement('div');
+      sq.className = 'sq ' + ((r + c) % 2 === 0 ? 'light' : 'dark');
+      if (idx === 36 || idx === 52) sq.classList.add('highlight');
+      sq.textContent = p;
+      boardEl.appendChild(sq);
+    });
+
+    /* -------------------- Browser Crim+ Mini-Interpreter -------------------- */
+    const PRESETS = {
+      hello: `# Try editing this Crim+ code and click Run!
+say "Hello, World!"
+
+set fruit to "apple"
+set score to 10
+
+instruction to cheer using times:
+    repeat times times:
+        say "Crim+ is awesome!" in crimson
+    end repeat
+end instruction
+
+if fruit is "apple" and score >= 10, then do:
+    say "Apples are red! Score: ", then score
+    perform cheer using 2
+end if`,
+
+      fib: `# Recursive instructions with 'give back'
+instruction to fibonacci using n:
+    if n <= 1, then do:
+        give back n
+    end if
+    set a to fibonacci with n - 1
+    set b to fibonacci with n - 2
+    give back a + b
+end instruction
+
+set i to 0
+as long as i <= 8, do:
+    set val to fibonacci with i
+    say "fib(", then i, then ") = ", then val
+    change i by 1
+end while`,
+
+      shapes: `# Render shapes right in the browser preview!
+use display
+open display
+
+banner is shape, details are:
+    shape is 4 sides
+    width is 220
+    height is 70
+    color is crimson
+    position is center
+end banner details
+display banner
+
+orb is shape, details are:
+    shape is circle
+    width is 44
+    height is 44
+    color is gold
+    position is top left
+end orb details
+display orb
+move orb right 45 pixels
+move orb down 68 pixels
+
+say "Rendered crimson banner & gold orb!" in gold`
+    };
+
+    const editor = document.getElementById('crim-editor');
+    const consoleEl = document.getElementById('pg-console');
+    const canvasWrap = document.getElementById('pg-canvas-wrap');
+    const canvas = document.getElementById('pg-canvas');
+    const ctx = canvas.getContext('2d');
+
+    function loadPreset(key, btn) {
+      editor.value = PRESETS[key];
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      runCrimPlayground();
+    }
+
+    function clearOutput() {
+      consoleEl.innerHTML = '';
+      canvasWrap.style.display = 'none';
+    }
+
+    const COLOR_MAP = {
+      crimson: '#dc143c', red: '#ff1e42', gold: '#ffc800', yellow: '#ffe600',
+      green: '#00c800', blue: '#1e64ff', purple: '#a020f0', white: '#ffffff',
+      black: '#000000', orange: '#ff8c00', pink: '#ff69b4', cyan: '#00dcdc',
+      gray: '#969696', grey: '#969696'
+    };
+
+    class ReturnSignal { constructor(v) { this.value = v; } }
+    class StopSignal {}
+
+    function runCrimPlayground() {
+      consoleEl.innerHTML = '';
+      canvasWrap.style.display = 'none';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const rawLines = editor.value.split(/\r?\n/);
+      const lines = [];
+      rawLines.forEach((raw, idx) => {
+        let out = '', inQ = false;
+        for (const ch of raw) {
+          if (ch === '"') inQ = !inQ;
+          if (ch === '#' && !inQ) break;
+          out += ch;
+        }
+        const trimmed = out.trim();
+        if (trimmed) lines.push({ text: trimmed, num: idx + 1 });
+      });
+
+      const env = {};
+      const defs = {};
+      const elements = {};
+      const scene = [];
+      let displayOpen = false;
+      let steps = 0;
+
+      function logLine(txt, color) {
+        const div = document.createElement('div');
+        div.textContent = txt;
+        if (color && COLOR_MAP[color.toLowerCase()]) div.style.color = COLOR_MAP[color.toLowerCase()];
+        else if (color && /^#[0-9a-f]{6}$/i.test(color)) div.style.color = color;
+        consoleEl.appendChild(div);
+      }
+
+      function splitJoined(expr) {
+        const parts = [];
+        let start = 0, inQ = false;
+        for (let i = 0; i < expr.length; i++) {
+          if (expr[i] === '"') inQ = !inQ;
+          if (!inQ && expr.slice(i).match(/^,\s*then\b/)) {
+            parts.push(expr.slice(start, i).trim());
+            const m = expr.slice(i).match(/^,\s*then\b/);
+            i += m[0].length - 1;
+            start = i + 1;
+          }
+        }
+        parts.push(expr.slice(start).trim());
+        return parts;
+      }
+
+      function evalExpr(expr, lineNum) {
+        expr = expr.trim();
+        if (/^"[^"]*"$/.test(expr)) return expr.slice(1, -1);
+        const rnd = expr.match(/^random number between\s+(-?\d+)\s+and\s+(-?\d+)$/);
+        if (rnd) {
+          const a = parseInt(rnd[1], 10), b = parseInt(rnd[2], 10);
+          return Math.floor(Math.random() * (b - a + 1)) + a;
+        }
+        const callWith = expr.match(/^([A-Za-z_]\w*)\s+with\s+(.+)$/);
+        if (callWith && defs[callWith[1]]) {
+          const args = callWith[2].split(/\s*,\s*|\s+and\s+/).map(a => evalExpr(a, lineNum));
+          return callDef(callWith[1], args, lineNum);
+        }
+        const runCall = expr.match(/^(?:run|perform)\s+([A-Za-z_]\w*)(?:\s+using\s+(.+))?$/);
+        if (runCall && defs[runCall[1]]) {
+          const args = runCall[2] ? runCall[2].split(/\s*,\s*|\s+and\s+/).map(a => evalExpr(a, lineNum)) : [];
+          return callDef(runCall[1], args, lineNum);
+        }
+        // Replace variables & math functions safely
+        const replaced = expr
+          .replace(/\bsqrt\s+([A-Za-z0-9_.]+)/g, 'Math.sqrt($1)')
+          .replace(/\babs\s+([A-Za-z0-9_.]+)/g, 'Math.abs($1)')
+          .replace(/\^/g, '**')
+          .replace(/\bmod\b/g, '%')
+          .replace(/\b[A-Za-z_]\w*\b/g, (tok) => {
+            if (tok === 'Math' || tok === 'sqrt' || tok === 'abs') return tok;
+            if (tok in env) return typeof env[tok] === 'string' ? JSON.stringify(env[tok]) : env[tok];
+            if (tok in defs) return JSON.stringify(callDef(tok, [], lineNum));
+            throw new Error(`Line ${lineNum}: I don't know what '${tok}' is yet.`);
+          });
+        try {
+          return Function('"use strict"; return (' + replaced + ')')();
+        } catch (e) {
+          throw new Error(`Line ${lineNum}: I couldn't calculate '${expr}'.`);
+        }
+      }
+
+      function evalJoined(expr, lineNum) {
+        const parts = splitJoined(expr);
+        if (parts.length === 1) return evalExpr(parts[0], lineNum);
+        return parts.map(p => String(evalExpr(p, lineNum))).join('');
+      }
+
+      function evalCond(cond, lineNum) {
+        if (/\bor\b/.test(cond)) return cond.split(/\s+or\s+/).some(c => evalCond(c, lineNum));
+        if (/\band\b/.test(cond)) return cond.split(/\s+and\s+/).every(c => evalCond(c, lineNum));
+        const m = cond.match(/^(.+?)\s*(<=|>=|!=|<|>|=|\bis not\b|\bis\b)\s*(.+)$/);
+        if (!m) throw new Error(`Line ${lineNum}: I don't understand the condition '${cond}'.`);
+        const a = evalExpr(m[1], lineNum);
+        const b = evalExpr(m[3], lineNum);
+        const op = m[2].trim();
+        if (op === '=' || op === 'is') return a == b;
+        if (op === '!=' || op === 'is not') return a != b;
+        if (op === '<') return Number(a) < Number(b);
+        if (op === '>') return Number(a) > Number(b);
+        if (op === '<=') return Number(a) <= Number(b);
+        if (op === '>=') return Number(a) >= Number(b);
+        return false;
+      }
+
+      function callDef(name, args, lineNum) {
+        const fn = defs[name];
+        if (!fn) throw new Error(`Line ${lineNum}: I don't know an instruction called '${name}'.`);
+        const saved = {};
+        fn.params.forEach((p, idx) => {
+          if (p in env) saved[p] = env[p];
+          env[p] = args[idx];
+        });
+        let ret = 0;
+        try {
+          execBlock(fn.body);
+        } catch (e) {
+          if (e instanceof ReturnSignal) ret = e.value;
+          else throw e;
+        } finally {
+          fn.params.forEach((p) => {
+            if (p in saved) env[p] = saved[p];
+            else delete env[p];
+          });
+        }
+        return ret;
+      }
+
+      function parseBlock(idx, endRegex) {
+        const body = [];
+        while (idx < lines.length) {
+          if (endRegex && endRegex.test(lines[idx].text)) {
+            return { body, next: idx + 1 };
+          }
+          body.push(lines[idx]);
+          idx++;
+        }
+        if (endRegex) throw new Error(`Unclosed block near line ${body[0]?.num || 1}.`);
+        return { body, next: idx };
+      }
+
+      function execBlock(block) {
+        let i = 0;
+        while (i < block.length) {
+          if (++steps > 5000) throw new Error("Stopped: loop ran over 5,000 steps.");
+          const { text, num } = block[i];
+
+          if (/^use\s+/.test(text)) { i++; continue; }
+          if (text === 'open display') { displayOpen = true; canvasWrap.style.display = 'block'; i++; continue; }
+
+          const elMatch = text.match(/^(\w+)\s+is\s+shape\s*,\s*details are:?$/);
+          if (elMatch) {
+            const name = elMatch[1];
+            const spec = { shape: 'rect', width: 50, height: 50, color: 'crimson', position: 'center', dx: 0, dy: 0 };
+            i++;
+            while (i < block.length && !new RegExp(`^end\s+${name}\s+details$`).test(block[i].text)) {
+              const d = block[i].text;
+              if (/^shape\s+is\s+circle$/i.test(d)) spec.shape = 'circle';
+              const wm = d.match(/^width\s+is\s+(\d+)/); if (wm) spec.width = parseInt(wm[1], 10);
+              const hm = d.match(/^height\s+is\s+(\d+)/); if (hm) spec.height = parseInt(hm[1], 10);
+              const cm = d.match(/^color\s+is\s+(\w+)/); if (cm) spec.color = cm[1];
+              const pm = d.match(/^position\s+is\s+(.+)$/); if (pm) spec.position = pm[1].trim();
+              i++;
+            }
+            elements[name] = spec;
+            i++;
+            continue;
+          }
+
+          const dispMatch = text.match(/^display\s+(\w+)$/);
+          if (dispMatch) {
+            if (elements[dispMatch[1]] && !scene.includes(dispMatch[1])) scene.push(dispMatch[1]);
+            i++; continue;
+          }
+
+          const moveMatch = text.match(/^move\s+(\w+)\s+(left|right|up|down)\s+(.+?)(?:\s+pixels?)?$/);
+          if (moveMatch) {
+            const spec = elements[moveMatch[1]];
+            const amt = Number(evalExpr(moveMatch[3], num));
+            if (spec) {
+              if (moveMatch[2] === 'right') spec.dx += amt;
+              if (moveMatch[2] === 'left') spec.dx -= amt;
+              if (moveMatch[2] === 'down') spec.dy += amt;
+              if (moveMatch[2] === 'up') spec.dy -= amt;
+            }
+            i++; continue;
+          }
+
+          const defMatch = text.match(/^(?:definition of|instruction to)\s+(\w+)(?:\s+using\s+(.+?))?\s*:?$/);
+          if (defMatch) {
+            const name = defMatch[1];
+            const params = defMatch[2] ? defMatch[2].split(/\s*,\s*|\s+and\s+/).map(s => s.trim()) : [];
+            let depth = 1, j = i + 1;
+            while (j < block.length && depth > 0) {
+              if (/^(?:definition of|instruction to)\b/.test(block[j].text)) depth++;
+              else if (/^end\s+(?:instruction|definition)\b/.test(block[j].text)) depth--;
+              j++;
+            }
+            defs[name] = { params, body: block.slice(i + 1, j - 1) };
+            i = j;
+            continue;
+          }
+
+          const ifMatch = text.match(/^if\s+(.+?)\s*,?\s*then do:?$/);
+          if (ifMatch) {
+            let depth = 1, j = i + 1;
+            const branches = [{ cond: ifMatch[1], body: [] }];
+            while (j < block.length && depth > 0) {
+              const t = block[j].text;
+              if (/^if\b/.test(t)) { depth++; branches[branches.length - 1].body.push(block[j]); }
+              else if (/^end\s+if$/.test(t)) {
+                depth--;
+                if (depth > 0) branches[branches.length - 1].body.push(block[j]);
+              } else if (depth === 1 && /^but if\s+(.+?)\s*,?\s*then do:?$/.test(t)) {
+                branches.push({ cond: t.match(/^but if\s+(.+?)\s*,?\s*then do:?$/)[1], body: [] });
+              } else if (depth === 1 && /^anything else\s*,?\s*do:?$/.test(t)) {
+                branches.push({ cond: null, body: [] });
+              } else {
+                branches[branches.length - 1].body.push(block[j]);
+              }
+              j++;
+            }
+            for (const br of branches) {
+              if (br.cond === null || evalCond(br.cond, num)) {
+                execBlock(br.body);
+                break;
+              }
+            }
+            i = j;
+            continue;
+          }
+
+          const repMatch = text.match(/^repeat\s+(.+?)(?:\s+times)?\s*:?$/);
+          if (repMatch) {
+            const count = Number(evalExpr(repMatch[1], num));
+            let depth = 1, j = i + 1;
+            while (j < block.length && depth > 0) {
+              if (/^repeat\b/.test(block[j].text)) depth++;
+              else if (/^end\s+repeat$/.test(block[j].text)) depth--;
+              j++;
+            }
+            const body = block.slice(i + 1, j - 1);
+            try {
+              for (let k = 0; k < count; k++) execBlock(body);
+            } catch (e) { if (!(e instanceof StopSignal)) throw e; }
+            i = j;
+            continue;
+          }
+
+          const whileMatch = text.match(/^(as long as|until)\s+(.+?)\s*,?\s*do:?$/);
+          if (whileMatch) {
+            let depth = 1, j = i + 1;
+            while (j < block.length && depth > 0) {
+              if (/^(?:as long as|until)\b/.test(block[j].text)) depth++;
+              else if (/^end\s+while$/.test(block[j].text)) depth--;
+              j++;
+            }
+            const body = block.slice(i + 1, j - 1);
+            try {
+              while (whileMatch[1] === 'as long as' ? evalCond(whileMatch[2], num) : !evalCond(whileMatch[2], num)) {
+                execBlock(body);
+              }
+            } catch (e) { if (!(e instanceof StopSignal)) throw e; }
+            i = j;
+            continue;
+          }
+
+          if (text === 'stop') throw new StopSignal();
+
+          const retMatch = text.match(/^give back\s+(.+)$/);
+          if (retMatch) throw new ReturnSignal(evalExpr(retMatch[1], num));
+
+          const setMatch = text.match(/^set\s+(\w+)\s+to\s+(.+)$/);
+          if (setMatch) {
+            env[setMatch[1]] = evalJoined(setMatch[2], num);
+            i++; continue;
+          }
+
+          const chgMatch = text.match(/^change\s+(\w+)\s+by\s+(.+)$/);
+          if (chgMatch) {
+            env[chgMatch[1]] = Number(env[chgMatch[1]] || 0) + Number(evalExpr(chgMatch[2], num));
+            i++; continue;
+          }
+
+          const runMatch = text.match(/^(?:run|perform)\s+(\w+)(?:\s+using\s+(.+))?$/);
+          if (runMatch) {
+            const args = runMatch[2] ? runMatch[2].split(/\s*,\s*|\s+and\s+/).map(a => evalExpr(a, num)) : [];
+            callDef(runMatch[1], args, num);
+            i++; continue;
+          }
+
+          const sayMatch = text.match(/^say\s+(.+?)(?:\s+in\s+([A-Za-z#0-9]+))?$/);
+          if (sayMatch) {
+            logLine(String(evalJoined(sayMatch[1], num)), sayMatch[2] || null);
+            i++; continue;
+          }
+
+          throw new Error(`Line ${num}: I don't understand '${text}' in the web preview yet.`);
+        }
+      }
+
+      try {
+        execBlock(lines);
+        if (displayOpen && scene.length) {
+          ctx.fillStyle = '#14101c';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          for (const name of scene) {
+            const s = elements[name];
+            const bx = s.position === 'top left' ? 0 : (canvas.width - s.width) / 2;
+            const by = s.position === 'top left' ? 0 : (canvas.height - s.height) / 2;
+            const x = bx + s.dx, y = by + s.dy;
+            ctx.fillStyle = COLOR_MAP[s.color.toLowerCase()] || s.color;
+            if (s.shape === 'circle') {
+              ctx.beginPath();
+              ctx.ellipse(x + s.width / 2, y + s.height / 2, s.width / 2, s.height / 2, 0, 0, Math.PI * 2);
+              ctx.fill();
+            } else {
+              ctx.fillRect(x, y, s.width, s.height);
+            }
+          }
+        }
+        if (!consoleEl.children.length && !displayOpen) {
+          logLine('(Program finished with no output)', null);
+        }
+      } catch (err) {
+        const div = document.createElement('div');
+        div.className = 'log-err';
+        div.textContent = err.message;
+        consoleEl.appendChild(div);
+      }
+    }
+
+    loadPreset('hello', document.querySelector('.preset-btn'));
+  </script>
+</body>
+</html>
