@@ -31,6 +31,18 @@
     "csv": {
       "version": "1.3",
       "url": "https://raw.githubusercontent.com/CrimsonCyan-CODE/Crim-PLUS/main/modules/csv.rose"
-    }
+    },
+    "webtools": {
+      "version": "1.0",
+      "url": "https://raw.githubusercontent.com/CrimsonCyan-CODE/Crim-PLUS/main/modules/webtools.rose"
+    },
+    "filetools": {
+      "version": "1.0",
+      "url": "https://raw.githubusercontent.com/CrimsonCyan-CODE/Crim-PLUS/main/modules/filetools.rose"
+    },
+    "systemtools": {
+      "version": "1.0",
+      "url": "https://raw.githubusercontent.com/CrimsonCyan-CODE/Crim-PLUS/main/modules/systemtools.rose"
+    },
   }
 }
