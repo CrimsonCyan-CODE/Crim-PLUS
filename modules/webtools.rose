@@ -1,0 +1,12 @@
+{
+  "rose_format": 2,
+  "name": "webtools",
+  "version": "1.0",
+  "files": [],
+  "python": [
+    {
+      "name": "webtools.py",
+      "source": "\"\"\"webtools - get things from the internet (a CrimCobra module).\n\nUse it with:   use webtools\n    set page to fetch_text with \"https://example.com\"          the page as text\n    set data to fetch_json with \"https://api.example.com/x\"    a dictionary or list: name of data, item 0 of data ...\n    set safe to url_encode with \"tea & cake\"                   tea%20%26%20cake\n\nA second input is a time limit in seconds (10 if you leave it out):  fetch_text with \"https://example.com\" and 3\nOnly http:// and https:// addresses work, and pages bigger than 5 MB are refused.\n\"\"\"\nimport json\nimport urllib.error\nimport urllib.parse\nimport urllib.request\n\nimport crimcobra\n\nLIMIT = 5_000_000\n\n\ndef _download(url, seconds):\n    url = str(url).strip()\n    if not url.lower().startswith((\"http://\", \"https://\")):\n        crimcobra.error(\"web addresses have to start with http:// or https://\")\n    request = urllib.request.Request(url, headers={\"User-Agent\": \"Crim+ webtools\"})\n    try:\n        with urllib.request.urlopen(request, timeout=float(seconds)) as response:\n            data = response.read(LIMIT + 1)\n    except urllib.error.HTTPError as e:\n        crimcobra.error(f\"the website answered {e.code} ({e.reason}) for {url}\")\n    except (urllib.error.URLError, OSError) as e:\n        crimcobra.error(f\"I couldn't reach {url} ({getattr(e, 'reason', e)}).\")\n    if len(data) > LIMIT:\n        crimcobra.error(\"that page is bigger than 5 MB, so I stopped.\")\n    return data\n\n\ndef fetch_text(url, seconds=10):\n    return _download(url, seconds).decode(\"utf-8\", errors=\"replace\")\n\n\ndef fetch_json(url, seconds=10):\n    try:\n        return json.loads(_download(url, seconds).decode(\"utf-8\", errors=\"replace\"))\n    except ValueError:\n        crimcobra.error(\"that page isn't JSON.\")\n\n\ndef url_encode(text):\n    return urllib.parse.quote(str(text), safe=\"\")\n"
+    }
+  ]
+}
