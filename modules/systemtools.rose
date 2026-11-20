@@ -1,0 +1,12 @@
+{
+  "rose_format": 2,
+  "name": "systemtools",
+  "version": "1.0",
+  "files": [],
+  "python": [
+    {
+      "name": "systemtools.py",
+      "source": "\"\"\"systemtools - ask the computer about itself (a CrimCobra module).\n\nUse it with:   use systemtools\n    say os_name                          Windows, Linux or Darwin\n    say today, then \" \", then now        2026-11-20 14:03:09\n    say cpu_count                        how many processors\n    set path to env_var with \"PATH\"      an environment variable (\"\" if it isn't set)\n    set ok to open_web_page with \"https://example.com\"     opens the browser (1 if it worked)\n    beep                                 the terminal bell\n\"\"\"\nimport os\nimport platform\nimport time\nimport webbrowser\n\n\ndef os_name():\n    return platform.system()\n\n\ndef python_version():\n    return platform.python_version()\n\n\ndef today():\n    return time.strftime(\"%Y-%m-%d\")\n\n\ndef now():\n    return time.strftime(\"%H:%M:%S\")\n\n\ndef timestamp():\n    return time.time()\n\n\ndef cpu_count():\n    return os.cpu_count() or 1\n\n\ndef env_var(name, default=\"\"):\n    return os.environ.get(str(name), default)\n\n\ndef open_web_page(url):\n    url = str(url).strip()\n    if not url.lower().startswith((\"http://\", \"https://\")):\n        return 0\n    return 1 if webbrowser.open(url) else 0\n\n\ndef beep():\n    print(\"\\a\", end=\"\", flush=True)\n"
+    }
+  ]
+}
