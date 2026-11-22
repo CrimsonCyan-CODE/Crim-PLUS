@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://github.com/CrimsonCyan-CODE/Crim-PLUS/releases/latest"><strong>⬇️ Download Crim+ for Windows</strong></a> •
-  <a href="https://crimsoncyan-code.github.io/Crim-PLUS"><strong>🌐 Easier To Read Site</strong></a>
+  <a href="https://crimsoncyan-code.github.io/Crim-PLUS"><strong>🌐 Web IDE (Some features are unsupported in the Website)</strong></a>
 </p>
 
 ---
