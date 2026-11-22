@@ -3,1222 +3,2635 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Crim-PLUS (Crim+) – Plain-English Game Programming Language</title>
-  <meta name="description" content="Crim-PLUS (Crim+) is a plain-English programming language for 2D games, tilemaps, particles, tweens, and clean logic—complete with an interactive playground, Rose package manager, and VS Code support." />
-  <meta name="keywords" content="Crim-PLUS, Crim+, CrimsonCyan-CODE, programming language, game development, beginner coding, Rose package manager, CDSL" />
+  <title>Crim+ Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-dark: #060507;
-      --bg-card: rgba(20, 11, 15, 0.78);
-      --border-subtle: rgba(255, 34, 71, 0.24);
-      --border-bright: rgba(255, 58, 92, 0.72);
-      --crimson: #ff1e42;
-      --crimson-deep: #99001b;
-      --ember: #ff6238;
-      --text-main: #f6f2f4;
-      --text-muted: #a6979e;
-      --code-bg: #0b080a;
-      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --bg-app: #0c0c0e;
+      --bg-panel: #131317;
+      --bg-sub: #19191f;
+      --bg-hover: #212129;
+      --border-main: #24242b;
+      --text-main: #f4f4f6;
+      --text-muted: #8e8e9a;
+      --accent: #e11d48;
+      --accent-hover: #ff2a5f;
+      --accent-soft: rgba(225, 29, 72, 0.14);
+      --accent-border: rgba(225, 29, 72, 0.35);
+      --stage-well: #09090b;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
+    body.light-theme {
+      --bg-app: #ffffff;
+      --bg-panel: #f9f9fb;
+      --bg-sub: #ffffff;
+      --bg-hover: #fdf2f8;
+      --border-main: #f1d5e3;
+      --text-main: #1f1620;
+      --text-muted: #7a5c6c;
+      --accent: #ec4899;
+      --accent-hover: #f43f5e;
+      --accent-soft: rgba(236, 72, 153, 0.12);
+      --accent-border: rgba(236, 72, 153, 0.35);
+      --stage-well: #fdf2f8;
+    }
 
     body {
-      font-family: var(--font-sans);
-      background-color: var(--bg-dark);
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-app);
       color: var(--text-main);
-      line-height: 1.6;
-      overflow-x: hidden;
-      position: relative;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
 
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background-image:
-        radial-gradient(circle at 50% -10%, rgba(255, 30, 66, 0.28), transparent 55%),
-        radial-gradient(circle at 85% 60%, rgba(153, 0, 27, 0.2), transparent 45%),
-        linear-gradient(rgba(255, 30, 66, 0.045) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 30, 66, 0.045) 1px, transparent 1px);
-      background-size: 100% 100%, 100% 100%, 44px 44px, 44px 44px;
-      z-index: -2;
-      pointer-events: none;
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-ligatures: none;
     }
 
-    .glow-orb {
-      position: fixed;
-      width: 520px;
-      height: 520px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(255, 30, 66, 0.16) 0%, transparent 70%);
-      filter: blur(42px);
-      top: 18%;
-      left: -140px;
-      z-index: -1;
-      animation: floatOrb 12s ease-in-out infinite alternate;
-      pointer-events: none;
+    .panel-bg {
+      background-color: var(--bg-panel);
+      border-color: var(--border-main);
     }
 
-    @keyframes floatOrb {
-      0% { transform: translate(0, 0) scale(1); }
-      100% { transform: translate(140px, 90px) scale(1.15); }
+    .sub-bg {
+      background-color: var(--bg-sub);
+      border-color: var(--border-main);
     }
 
-    /* Scroll Reveal & Floating Shapes */
-    .reveal-shape {
-      opacity: 0;
-      transform: translateY(48px) scale(0.96);
-      transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    .border-theme {
+      border-color: var(--border-main);
     }
 
-    .reveal-shape.visible {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-
-    .type-on-scroll {
-      min-height: 1.2em;
-    }
-
-    .typing-caret::after {
-      content: "▋";
-      color: var(--crimson);
-      margin-left: 3px;
-      animation: blinkCaret 0.75s step-end infinite;
-    }
-
-    @keyframes blinkCaret {
-      50% { opacity: 0; }
-    }
-
-    /* Navbar */
-    nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      backdrop-filter: blur(14px);
-      background: rgba(6, 5, 7, 0.84);
-      border-bottom: 1px solid var(--border-subtle);
-    }
-
-    .nav-inner {
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 1rem 1.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo {
-      font-weight: 900;
-      font-size: 1.4rem;
-      letter-spacing: -0.03em;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      text-decoration: none;
-      color: var(--text-main);
-    }
-
-    .logo span {
-      background: linear-gradient(135deg, #ff1e42, #ff6b4a);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .badge-version {
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      padding: 0.18rem 0.5rem;
-      border-radius: 999px;
-      background: rgba(255, 30, 66, 0.14);
-      border: 1px solid var(--border-subtle);
-      color: #ff6b81;
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 1.5rem;
-      align-items: center;
-    }
-
-    .nav-links a {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 0.92rem;
-      font-weight: 600;
-      transition: color 0.2s;
-    }
-
-    .nav-links a:hover { color: var(--text-main); }
-
-    /* Buttons */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      padding: 0.8rem 1.45rem;
-      border-radius: 10px;
-      font-weight: 700;
-      font-size: 0.94rem;
-      text-decoration: none;
-      transition: all 0.25s ease;
-      cursor: pointer;
-      border: none;
-      font-family: inherit;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--crimson), var(--crimson-deep));
-      color: #fff;
-      box-shadow: 0 0 25px rgba(255, 30, 66, 0.42);
-      border: 1px solid rgba(255, 110, 130, 0.4);
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 32px rgba(255, 30, 66, 0.68);
-    }
-
-    .btn-secondary {
-      background: rgba(255, 255, 255, 0.04);
-      color: var(--text-main);
-      border: 1px solid var(--border-subtle);
-    }
-
-    .btn-secondary:hover {
-      border-color: var(--border-bright);
-      background: rgba(255, 30, 66, 0.12);
-      transform: translateY(-2px);
-    }
-
-    .container {
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 0 1.5rem;
-    }
-
-    /* Hero */
-    .hero {
-      padding: 5.5rem 0 3.5rem;
-      text-align: center;
-    }
-
-    .hero-pill {
-      display: inline-block;
-      padding: 0.35rem 0.95rem;
-      border-radius: 999px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: #ff8095;
-      background: rgba(255, 30, 66, 0.12);
-      border: 1px solid var(--border-subtle);
-      margin-bottom: 1.35rem;
-    }
-
-    .hero h1 {
-      font-size: clamp(2.7rem, 6vw, 4.5rem);
-      font-weight: 900;
-      line-height: 1.08;
-      letter-spacing: -0.04em;
-      margin-bottom: 1.2rem;
-    }
-
-    .gradient-text {
-      background: linear-gradient(135deg, #ffffff 20%, #ff2a4b 65%, #ff7340 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .hero p {
-      max-width: 650px;
-      margin: 0 auto 2.1rem;
-      font-size: 1.12rem;
+    .text-muted {
       color: var(--text-muted);
     }
 
-    .hero-actions {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-      flex-wrap: wrap;
+    .accent-btn {
+      background-color: var(--accent);
+      color: #ffffff;
+    }
+    .accent-btn:hover {
+      background-color: var(--accent-hover);
     }
 
-    /* Interactive Playground */
-    .playground-wrap {
-      margin: 3.5rem auto 1rem;
-      background: var(--code-bg);
-      border-radius: 18px;
-      border: 1px solid var(--border-bright);
-      box-shadow: 0 25px 75px rgba(0, 0, 0, 0.9), 0 0 45px rgba(255, 30, 66, 0.16);
-      overflow: hidden;
-      text-align: left;
+    .accent-pill {
+      background-color: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid var(--accent-border);
     }
 
-    .pg-header {
-      background: linear-gradient(90deg, #1a0d12, #0e090c);
-      padding: 0.8rem 1.1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border-subtle);
-      flex-wrap: wrap;
-      gap: 0.75rem;
+    /* Clean thin scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
     }
-
-    .window-dots {
-      display: flex;
-      gap: 0.45rem;
-      align-items: center;
-    }
-
-    .dot { width: 11px; height: 11px; border-radius: 50%; }
-    .dot.red { background: #ff1e42; box-shadow: 0 0 8px #ff1e42; }
-    .dot.amber { background: #ff9f1c; }
-    .dot.gray { background: #3b3236; }
-
-    .pg-presets {
-      display: flex;
-      gap: 0.4rem;
-      flex-wrap: wrap;
-    }
-
-    .preset-btn {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-      font-size: 0.78rem;
-      padding: 0.3rem 0.7rem;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .preset-btn:hover, .preset-btn.active {
-      background: rgba(255, 30, 66, 0.2);
-      border-color: var(--border-bright);
-      color: #fff;
-    }
-
-    .pg-body {
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      min-height: 340px;
-    }
-
-    @media (max-width: 820px) {
-      .pg-body { grid-template-columns: 1fr; }
-      .nav-links { display: none; }
-    }
-
-    .pg-editor-pane {
-      border-right: 1px solid var(--border-subtle);
-      display: flex;
-      flex-direction: column;
-    }
-
-    .pg-pane-label {
-      font-family: var(--font-mono);
-      font-size: 0.74rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-muted);
-      padding: 0.55rem 1rem;
-      background: rgba(255, 255, 255, 0.02);
-      border-bottom: 1px solid rgba(255, 34, 71, 0.14);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    textarea#crim-editor {
-      width: 100%;
-      flex: 1;
-      min-height: 270px;
+    ::-webkit-scrollbar-track {
       background: transparent;
-      border: none;
-      outline: none;
-      resize: vertical;
-      padding: 1.1rem;
-      color: #f4eaee;
-      font-family: var(--font-mono);
-      font-size: 0.9rem;
-      line-height: 1.6;
-      tab-size: 4;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-main);
+      border-radius: 9999px;
     }
 
-    .pg-output-pane {
+    /* Line-numbered editor */
+    .editor-shell {
       display: flex;
-      flex-direction: column;
-      background: #080607;
-    }
-
-    #pg-canvas-wrap {
-      display: none;
-      padding: 0.75rem;
-      border-bottom: 1px solid rgba(255, 34, 71, 0.16);
-      background: #050405;
-      text-align: center;
-    }
-
-    #pg-canvas {
-      max-width: 100%;
-      border-radius: 8px;
-      border: 1px solid var(--border-subtle);
-      background: #14101c;
-    }
-
-    #pg-console {
       flex: 1;
-      padding: 1rem;
-      font-family: var(--font-mono);
-      font-size: 0.86rem;
-      line-height: 1.6;
-      overflow-y: auto;
-      white-space: pre-wrap;
-      color: #d9ccd2;
-      max-height: 310px;
+      overflow: hidden;
+      background-color: var(--bg-app);
     }
-
-    .log-err { color: #ff4d6d; font-weight: 600; }
-    .log-sys { color: #7a6870; font-style: italic; }
-
-    /* Sections */
-    .section { padding: 4.5rem 0; }
-
-    .section-title {
-      text-align: center;
-      margin-bottom: 3rem;
-    }
-
-    .section-title h2 {
-      font-size: clamp(2rem, 4vw, 2.75rem);
-      font-weight: 900;
-      letter-spacing: -0.03em;
-      margin-bottom: 0.6rem;
-    }
-
-    .section-title p {
+    .line-numbers {
+      width: 46px;
+      padding: 18px 10px 18px 0;
+      text-align: right;
       color: var(--text-muted);
-      max-width: 580px;
-      margin: 0 auto;
+      background-color: var(--bg-panel);
+      border-right: 1px solid var(--border-main);
+      user-select: none;
+      overflow: hidden;
+      line-height: 1.65;
+      font-size: 13.5px;
     }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-      gap: 1.5rem;
-    }
-
-    .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-subtle);
-      border-radius: 16px;
-      padding: 1.75rem;
-      backdrop-filter: blur(10px);
-      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
-    }
-
-    .card:hover {
-      transform: translateY(-4px);
-      border-color: var(--border-bright);
-      box-shadow: 0 12px 35px rgba(255, 30, 66, 0.16);
-    }
-
-    .card-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 10px;
-      display: grid;
-      place-items: center;
-      font-family: var(--font-mono);
-      font-weight: 700;
-      font-size: 1.05rem;
-      background: linear-gradient(135deg, rgba(255, 30, 66, 0.25), rgba(153, 0, 27, 0.15));
-      border: 1px solid var(--border-bright);
-      color: #ff4d6d;
-      margin-bottom: 1.1rem;
-    }
-
-    .card h3 { font-size: 1.18rem; margin-bottom: 0.5rem; }
-    .card p { color: var(--text-muted); font-size: 0.94rem; }
-    .card code {
-      font-family: var(--font-mono);
-      font-size: 0.84rem;
-      color: #ff8fa3;
-      background: rgba(255, 30, 66, 0.1);
-      padding: 0.1rem 0.35rem;
+    .line-num-item {
+      padding-right: 4px;
       border-radius: 4px;
     }
-
-    /* Chess Showcase */
-    .showcase-box {
-      background: linear-gradient(135deg, rgba(28, 10, 16, 0.92), rgba(11, 7, 10, 0.96));
-      border: 1px solid var(--border-bright);
-      border-radius: 20px;
-      padding: 2.5rem;
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 2.5rem;
-      align-items: center;
-      box-shadow: 0 20px 60px rgba(255, 30, 66, 0.15);
-    }
-
-    @media (max-width: 820px) {
-      .showcase-box { grid-template-columns: 1fr; }
-    }
-
-    .tag-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin: 1.25rem 0 1.75rem;
-    }
-
-    .tag {
-      font-family: var(--font-mono);
-      font-size: 0.78rem;
-      padding: 0.25rem 0.65rem;
-      border-radius: 6px;
-      background: rgba(255, 30, 66, 0.12);
-      border: 1px solid var(--border-subtle);
-      color: #ff8fa3;
-    }
-
-    .mini-board {
-      display: grid;
-      grid-template-columns: repeat(8, 1fr);
-      aspect-ratio: 1;
-      max-width: 300px;
-      margin: 0 auto;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 2px solid var(--border-bright);
-      box-shadow: 0 0 35px rgba(255, 30, 66, 0.28);
-    }
-
-    .sq {
-      display: grid;
-      place-items: center;
-      font-size: 1.25rem;
-      user-select: none;
-    }
-    .sq.light { background: #2b1d24; color: #f5f2f4; }
-    .sq.dark { background: #120b0f; color: #ff4d6d; }
-    .sq.highlight { background: rgba(255, 30, 66, 0.48); }
-
-    /* Quickstart */
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 1.25rem;
-    }
-
-    .step {
-      background: var(--code-bg);
-      border: 1px solid var(--border-subtle);
-      border-radius: 14px;
-      padding: 1.5rem;
-    }
-
-    .step-num {
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      color: var(--crimson);
+    .line-num-error {
+      background-color: var(--accent);
+      color: #ffffff;
       font-weight: 700;
-      margin-bottom: 0.4rem;
+    }
+    #code-editor {
+      flex: 1;
+      padding: 18px;
+      background: transparent;
+      color: var(--text-main);
+      border: none;
+      outline: none;
+      resize: none;
+      line-height: 1.65;
+      font-size: 13.5px;
+      tab-size: 4;
+      white-space: pre;
+      overflow: auto;
     }
 
-    .step code {
-      display: block;
-      margin-top: 0.75rem;
-      padding: 0.65rem 0.85rem;
-      background: #140d11;
-      border: 1px solid rgba(255, 30, 66, 0.2);
-      border-radius: 8px;
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      color: #ff8fa3;
+    .stage-well {
+      background-color: var(--stage-well);
     }
-
-    footer {
-      border-top: 1px solid var(--border-subtle);
-      padding: 2.5rem 0;
-      margin-top: 4rem;
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-
-    footer a { color: #ff5c77; text-decoration: none; }
-    footer a:hover { text-decoration: underline; }
   </style>
 </head>
-<body>
-  <div class="glow-orb"></div>
+<body class="h-screen flex flex-col overflow-hidden">
 
-  <nav>
-    <div class="nav-inner">
-      <a href="#" class="logo">
-        Crim<span>-PLUS</span>
-        <span class="badge-version">v1.5.0</span>
-      </a>
-      <div class="nav-links">
-        <a href="#playground">Playground</a>
-        <a href="#features">Features</a>
-        <a href="#chess">Built in Crim+</a>
-        <a href="#quickstart">Quickstart</a>
-        <a href="https://github.com/CrimsonCyan-CODE/Crim-PLUS" target="_blank" rel="noopener">GitHub ↗</a>
+  <!-- WELCOME SCREEN -->
+  <section id="welcome-screen" class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-5" style="background: radial-gradient(ellipse at 50% 0%, rgba(225,29,72,.20), transparent 55%), var(--bg-app);">
+    <div class="w-full max-w-4xl mx-auto py-8">
+      <div class="flex items-center justify-center gap-3 mb-10">
+        <div class="w-12 h-12 rounded-2xl accent-btn flex items-center justify-center font-extrabold text-xl shadow-lg">C+</div>
+        <div>
+          <div class="font-extrabold text-2xl tracking-tight">Crim+ Studio</div>
+          <div class="text-muted text-xs font-medium tracking-wide">THE CRIM+ WEB EDITOR</div>
+        </div>
+      </div>
+
+      <div class="text-center mb-10">
+        <div class="accent-pill inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold mb-5">Crim+ v1.6.0</div>
+        <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight leading-tight mb-4">Create scripts<br><span style="color:var(--accent)">the way you think</span></h1>
+        <p class="text-muted text-base sm:text-lg max-w-2xl mx-auto">Welcome to Crim+ Studio — a place to write code, experiment with ideas, and build your own games.</p>
+        <button id="btn-open-editor" class="accent-btn mt-8 px-8 py-4 rounded-xl font-bold text-base shadow-lg hover:opacity-90 transition inline-flex items-center gap-3">
+          Open Editor <span aria-hidden="true">→</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div class="panel-bg border rounded-2xl p-5">
+          <div class="text-2xl mb-3">⌨️</div>
+          <div class="font-bold mb-1">Write your code</div>
+          <p class="text-muted text-sm">Use Crim+'s plain-English syntax in a real text editor.</p>
+        </div>
+        <div class="panel-bg border rounded-2xl p-5">
+          <div class="text-2xl mb-3">🎮</div>
+          <div class="font-bold mb-1">See it come alive</div>
+          <p class="text-muted text-sm">Run your scripts and see your creations on the stage.</p>
+        </div>
+        <div class="panel-bg border rounded-2xl p-5">
+          <div class="text-2xl mb-3">✨</div>
+          <div class="font-bold mb-1">Make something yours</div>
+          <p class="text-muted text-sm">Try examples, experiment, and build something new.</p>
+        </div>
+      </div>
+
+      <div class="text-center text-sm text-muted">
+        New to Crim+? <a href="https://crimsoncyan-code.github.io/Crim-PLUS" target="_blank" rel="noopener noreferrer" class="font-semibold underline" style="color:var(--accent)">Learn Crim+ in the documentation</a>
       </div>
     </div>
-  </nav>
+  </section>
 
-  <main class="container">
-    <section class="hero">
-      <div class="hero-pill">Plain-English Game &amp; Logic Programming</div>
-      <h1>Create scripts the<br><span class="gradient-text">way you think.</span></h1>
-      <p>
-        <strong>Crim-PLUS (Crim+)</strong> removes curly braces, semicolons, and cryptic boilerplate.
-        Build 2D games with tilemaps, particles, tweens, custom data files, and readable logic that feels like giving direct instructions.
-      </p>
-      <div class="hero-actions">
-        <a href="https://github.com/CrimsonCyan-CODE/Crim-PLUS/releases/latest" target="_blank" rel="noopener" class="btn btn-primary">
-          Download Windows Setup Wizard
-        </a>
-        <a href="https://github.com/CrimsonCyan-CODE/Crim-PLUS" target="_blank" rel="noopener" class="btn btn-secondary">
-          View Source on GitHub
-        </a>
+  <!-- TOP HEADER BAR -->
+  <header id="app-header" class="hidden panel-bg border-b px-5 py-3 flex items-center justify-between gap-4 shrink-0">
+    <!-- Left: Brand + Run / Stop -->
+    <div class="flex items-center gap-4">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg accent-btn flex items-center justify-center font-extrabold text-sm tracking-tight shadow-sm">
+          C+
+        </div>
+        <span class="font-extrabold text-base tracking-tight">Crim+</span>
       </div>
 
-      <!-- Interactive Crim+ Playground -->
-      <div id="playground" class="playground-wrap reveal-shape">
-        <div class="pg-header">
-          <div class="window-dots">
-            <span class="dot red"></span>
-            <span class="dot amber"></span>
-            <span class="dot gray"></span>
-          </div>
-          <div class="pg-presets">
-            <button class="preset-btn active" onclick="loadPreset('hello', this)">hello.crim</button>
-            <button class="preset-btn" onclick="loadPreset('fib', this)">fibonacci.crim</button>
-            <button class="preset-btn" onclick="loadPreset('shapes', this)">shapes.crim</button>
-          </div>
-          <button class="btn btn-primary" style="padding: 0.42rem 1rem; font-size: 0.84rem;" onclick="runCrimPlayground()">▶ Run Code</button>
+      <div class="h-5 w-px bg-[var(--border-main)]"></div>
+
+      <div class="flex items-center gap-2">
+        <button id="btn-run" class="accent-btn flex items-center gap-1.5 font-semibold text-xs px-4 py-2 rounded-lg transition cursor-pointer shadow-sm">
+          <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M5 3l14 9-14 9V3z"/></svg>
+          <span>Run</span>
+        </button>
+        <button id="btn-stop" class="sub-bg border hover:opacity-80 flex items-center gap-1.5 font-semibold text-xs px-3.5 py-2 rounded-lg transition cursor-pointer">
+          <svg class="w-3 h-3 fill-current" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+          <span>Stop</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Right: Examples + Export .crim + Dark/Light Theme Toggle -->
+    <div class="flex items-center gap-2.5">
+      <select id="example-select" class="sub-bg border rounded-lg px-3 py-1.5 text-xs font-medium focus:outline-none cursor-pointer">
+        <option value="catch_star">Example: Catch the Star</option>
+        <option value="bouncing_ball">Example: Bouncing Ball</option>
+        <option value="orbit_shapes">Example: Orbital Shapes</option>
+      </select>
+
+      <button id="btn-download-crim" class="sub-bg border hover:opacity-80 text-xs font-semibold px-3 py-1.5 rounded-lg transition cursor-pointer">
+        Export .crim
+      </button>
+
+      <button id="btn-theme-toggle" class="accent-pill text-xs font-semibold px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5" title="Switch theme">
+        <span id="theme-icon">☀️</span>
+        <span id="theme-label">Light Mode</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN 2-COLUMN WORKSPACE -->
+  <main id="app-main" class="hidden flex-1 flex-col lg:flex-row overflow-hidden">
+
+    <!-- LEFT HALF (50%): PURE CODE EDITOR -->
+    <section class="w-full lg:w-1/2 h-1/2 lg:h-full flex flex-col border-b lg:border-b-0 lg:border-r border-theme">
+      <div class="panel-bg border-b px-4 py-2 flex items-center justify-between text-xs shrink-0">
+        <span class="font-semibold">Code</span>
+        <span id="cursor-pos" class="text-muted font-mono-code text-[11px]">Ln 1, Col 1</span>
+      </div>
+
+      <div class="editor-shell">
+        <div id="line-numbers" class="line-numbers font-mono-code">
+          <div class="line-num-item">1</div>
         </div>
-        <div class="pg-body">
-          <div class="pg-editor-pane">
-            <div class="pg-pane-label">
-              <span>Interactive Crim+ Editor</span>
-              <span style="color: #ff6b81;">Editable</span>
-            </div>
-            <textarea id="crim-editor" spellcheck="false"></textarea>
-          </div>
-          <div class="pg-output-pane">
-            <div class="pg-pane-label">
-              <span>Live Output</span>
-              <button onclick="clearOutput()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-family:var(--font-mono);font-size:0.74rem;">Clear</button>
-            </div>
-            <div id="pg-canvas-wrap">
-              <canvas id="pg-canvas" width="360" height="180"></canvas>
-            </div>
-            <div id="pg-console"><span class="log-sys">Click "▶ Run Code" to execute Crim+ right in your browser...</span></div>
-          </div>
-        </div>
+        <textarea id="code-editor" class="font-mono-code" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="Write your Crim+ code here..."></textarea>
       </div>
     </section>
 
-    <section id="features" class="section">
-      <div class="section-title">
-        <h2 class="type-on-scroll" data-text="Batteries Included"></h2>
-        <p class="type-on-scroll" data-text="Everything you need to go from a blank script to a playable game without hunting for ten libraries."></p>
-      </div>
-      <div class="grid">
-        <div class="card reveal-shape">
-          <div class="card-icon">&gt;_</div>
-          <h3>Zero-Symbol Syntax</h3>
-          <p>Declare variables with <code>set x to 10</code>, branch with <code>if ... then do:</code>, and define reusable actions with <code>instruction to ...:</code>.</p>
-        </div>
-        <div class="card reveal-shape">
-          <div class="card-icon">[]</div>
-          <h3>Built-In Tilemaps &amp; Mouse</h3>
-          <p>Plug a grid directly into your display, place textures at <code>tile (x, y)</code>, and react to left, right, or middle clicks natively.</p>
-        </div>
-        <div class="card reveal-shape">
-          <div class="card-icon">~*</div>
-          <h3>Tweens &amp; Particles</h3>
-          <p>Smoothly animate movement with easing styles like <code>bounce out</code> or burst and stream custom particle emitters in one line.</p>
-        </div>
-        <div class="card reveal-shape">
-          <div class="card-icon">{}</div>
-          <h3>CDSL Data &amp; Levels</h3>
-          <p>Load structured game settings or entire tile-based levels from human-readable <code>.cdsl</code> files straight into your program.</p>
-        </div>
-        <div class="card reveal-shape">
-          <div class="card-icon">++</div>
-          <h3>Rose Package Manager</h3>
-          <p>Share and install reusable modules—complete with custom instructions, shapes, and event handlers—using <code>crim rose</code>.</p>
-        </div>
-        <div class="card reveal-shape">
-          <div class="card-icon">?!</div>
-          <h3>Human Error Messages</h3>
-          <p>No cryptic stack traces. Crim+ points to the exact line, suggests fixes for typos, and integrates directly with VS Code.</p>
-        </div>
-      </div>
-    </section>
+    <!-- RIGHT HALF (50%): TOP OUTPUTS (60%) + BOTTOM IMAGES & AUDIO (40%) -->
+    <section class="w-full lg:w-1/2 h-1/2 lg:h-full flex flex-col overflow-hidden">
 
-    <section id="chess" class="section">
-      <div class="showcase-box reveal-shape">
-        <div>
-          <div class="hero-pill" style="margin-bottom: 0.9rem;">Real Project Spotlight</div>
-          <h2 class="type-on-scroll" data-text="Full Chess Built in Crim+" style="font-size: 2rem; font-weight: 900; margin-bottom: 0.75rem;"></h2>
-          <p style="color: var(--text-muted);">
-            Using Crim-PLUS's tilemap engine, 64-square lists, and recursive check simulation, a complete playable chess rules engine runs natively in pure Crim+ code.
-          </p>
-          <div class="tag-list">
-            <span class="tag">Check &amp; Checkmate</span>
-            <span class="tag">Stalemate Detection</span>
-            <span class="tag">En Passant</span>
-            <span class="tag">Kingside &amp; Queenside Castling</span>
-            <span class="tag">Pawn Promotion</span>
+      <!-- TOP RIGHT (60%): OUTPUT AREA (STAGE & CONSOLE) -->
+      <div class="h-[60%] flex flex-col border-b border-theme overflow-hidden">
+        <!-- Output Header & Tabs -->
+        <div class="panel-bg border-b px-4 py-2 flex items-center justify-between shrink-0">
+          <div class="flex items-center gap-2">
+            <span class="font-semibold text-xs mr-2">Output</span>
+            <button id="tab-stage" class="accent-pill text-xs font-semibold px-3 py-1 rounded-md cursor-pointer transition">
+              Stage
+            </button>
+            <button id="tab-console" class="text-muted hover:text-[var(--text-main)] text-xs font-semibold px-3 py-1 rounded-md cursor-pointer transition flex items-center gap-1.5">
+              <span>Console</span>
+              <span id="console-badge" class="hidden text-[10px] px-1.5 py-0.2 rounded-full accent-btn">0</span>
+            </button>
           </div>
-          <a href="https://github.com/CrimsonCyan-CODE/Crim-PLUS" target="_blank" rel="noopener" class="btn btn-primary">
-            Explore the Source Code
-          </a>
-        </div>
-        <div class="mini-board" aria-hidden="true" id="mini-chess"></div>
-      </div>
-    </section>
 
-    <section id="quickstart" class="section">
-      <div class="section-title">
-        <h2 class="type-on-scroll" data-text="Start Coding in 60 Seconds"></h2>
-        <p class="type-on-scroll" data-text="No Python setup or dependencies needed—just run the Windows installer and start building."></p>
+          <div class="flex items-center gap-2 text-[11px] text-muted font-mono-code">
+            <span id="stage-status-dot" class="w-2 h-2 rounded-full bg-zinc-500"></span>
+            <span id="stage-status-text">Ready</span>
+          </div>
+        </div>
+
+        <!-- Stage View -->
+        <div id="view-stage" class="stage-well flex-1 p-4 flex items-center justify-center overflow-auto">
+          <div class="rounded-xl overflow-hidden border border-theme shadow-md">
+            <canvas id="stage-canvas" width="760" height="320" class="block max-w-full h-auto cursor-crosshair"></canvas>
+          </div>
+        </div>
+
+        <!-- Console View -->
+        <div id="view-console" class="hidden flex-1 flex flex-col overflow-hidden bg-[var(--bg-app)]">
+          <div id="console-output" class="flex-1 p-4 overflow-y-auto font-mono-code text-xs space-y-1.5">
+            <div class="text-muted italic">Console output from 'say' and error messages will appear here.</div>
+          </div>
+          <!-- Input Prompt Bar -->
+          <div id="console-input-bar" class="hidden p-2.5 panel-bg border-t flex items-center gap-2 shrink-0">
+            <span id="console-prompt-label" class="text-xs font-semibold truncate max-w-[45%]">Input:</span>
+            <input id="console-input-field" type="text" class="flex-1 sub-bg border rounded-lg px-3 py-1.5 text-xs focus:outline-none" placeholder="Type your answer and press Enter..." />
+            <button id="console-input-submit" class="accent-btn text-xs font-semibold px-3.5 py-1.5 rounded-lg cursor-pointer">Send</button>
+          </div>
+        </div>
       </div>
-      <div class="steps">
-        <div class="step reveal-shape">
-          <div class="step-num">STEP 01</div>
-          <h3>Run the Setup Wizard</h3>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Download the latest release and install Crim+ with one click.</p>
-          <code>Crim-PLUS-Setup.exe</code>
+
+      <!-- BOTTOM RIGHT (40%): IMAGES & AUDIO -->
+      <div id="asset-dropzone" class="h-[40%] flex flex-col overflow-hidden panel-bg">
+        <div class="border-b border-theme px-4 py-2 flex items-center justify-between shrink-0">
+          <div class="flex items-center gap-2">
+            <span class="font-semibold text-xs">Images & Audio</span>
+            <span class="text-[11px] text-muted hidden sm:inline">(Click any item to copy its name)</span>
+          </div>
+          <label class="accent-btn text-xs font-semibold px-3 py-1 rounded-lg cursor-pointer transition">
+            + Upload
+            <input id="asset-upload-input" type="file" accept="image/png,image/jpeg,image/gif,image/webp,audio/wav,audio/mpeg,audio/mp3,audio/ogg" multiple class="hidden" />
+          </label>
         </div>
-        <div class="step reveal-shape">
-          <div class="step-num">STEP 02</div>
-          <h3>Write a .crim File</h3>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Save your first plain-English script anywhere on your PC.</p>
-          <code>say "Hello, World!"</code>
-        </div>
-        <div class="step reveal-shape">
-          <div class="step-num">STEP 03</div>
-          <h3>Run It</h3>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Launch your program or check it for syntax issues.</p>
-          <code>crim hello.crim</code>
+
+        <div class="flex-1 p-3.5 overflow-y-auto">
+          <div id="assets-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+            <!-- Populated by JS -->
+          </div>
         </div>
       </div>
+
     </section>
   </main>
 
-  <footer>
-    <div class="container">
-      <p>
-        Created by <a href="https://github.com/CrimsonCyan-CODE" target="_blank" rel="noopener">CrimsonCyan-CODE</a>
-        • <a href="https://github.com/CrimsonCyan-CODE/Crim-PLUS" target="_blank" rel="noopener">Crim-PLUS on GitHub</a>
-      </p>
-    </div>
-  </footer>
+  <!-- Minimal Toast -->
+  <div id="toast" class="fixed bottom-4 right-4 accent-btn text-xs font-semibold px-3.5 py-2 rounded-lg shadow-lg opacity-0 pointer-events-none transition-opacity duration-200 z-50">
+    Copied!
+  </div>
 
-  <script>
-    /* -------------------- Scroll Reveal & Typewriter Animations -------------------- */
-    const shapeObserver = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          shapeObserver.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.14 });
+<script>
+/**
+ * ============================================================================
+ * BUILT-IN STARTER SPRITES & EXAMPLES
+ * ============================================================================
+ */
+function makeSvgDataUri(svg) {
+  return "data:image/svg+xml;utf8," + encodeURIComponent(svg.trim());
+}
 
-    document.querySelectorAll('.reveal-shape').forEach((el, idx) => {
-      el.style.transitionDelay = `${(idx % 3) * 90}ms`;
-      shapeObserver.observe(el);
-    });
+const uploadedAssets = {
+  "star.png": {
+    name: "star.png",
+    type: "image",
+    builtin: true,
+    dataUrl: makeSvgDataUri(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+        <polygon points="32,4 40,22 60,24 45,38 49,58 32,48 15,58 19,38 4,24 24,22"
+                 fill="#facc15" stroke="#ca8a04" stroke-width="2.5" stroke-linejoin="round"/>
+      </svg>
+    `)
+  },
+  "hero.png": {
+    name: "hero.png",
+    type: "image",
+    builtin: true,
+    dataUrl: makeSvgDataUri(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+        <rect x="12" y="14" width="40" height="38" rx="12" fill="#e11d48" stroke="#ffe4e6" stroke-width="2.5"/>
+        <circle cx="25" cy="30" r="3.5" fill="#ffffff"/>
+        <circle cx="39" cy="30" r="3.5" fill="#ffffff"/>
+        <path d="M25 40 Q32 45 39 40" stroke="#ffffff" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      </svg>
+    `)
+  }
+};
 
-    const typeObserver = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting && !entry.target.dataset.typed) {
-          entry.target.dataset.typed = "true";
-          const fullText = entry.target.dataset.text || "";
-          entry.target.classList.add('typing-caret');
-          let i = 0;
-          const speed = fullText.length > 40 ? 16 : 28;
-          const timer = setInterval(() => {
-            entry.target.textContent = fullText.slice(0, ++i);
-            if (i >= fullText.length) {
-              clearInterval(timer);
-              setTimeout(() => entry.target.classList.remove('typing-caret'), 700);
-            }
-          }, speed);
-          typeObserver.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.35 });
-
-    document.querySelectorAll('.type-on-scroll').forEach(el => typeObserver.observe(el));
-
-    /* -------------------- Mini Chessboard -------------------- */
-    const pieces = [
-      '♜','♞','♝','♛','♚','♝','♞','♜',
-      '♟','♟','♟','♟','♟','♟','♟','♟',
-      '','','','','','','','',
-      '','','','','','','','',
-      '','','','','♙','','','',
-      '','','','','','','','',
-      '♙','♙','♙','♙','','♙','♙','♙',
-      '♖','♘','♗','♕','♔','♗','♘','♖'
-    ];
-    const boardEl = document.getElementById('mini-chess');
-    pieces.forEach((p, idx) => {
-      const r = Math.floor(idx / 8), c = idx % 8;
-      const sq = document.createElement('div');
-      sq.className = 'sq ' + ((r + c) % 2 === 0 ? 'light' : 'dark');
-      if (idx === 36 || idx === 52) sq.classList.add('highlight');
-      sq.textContent = p;
-      boardEl.appendChild(sq);
-    });
-
-    /* -------------------- Browser Crim+ Mini-Interpreter -------------------- */
-    const PRESETS = {
-      hello: `# Try editing this Crim+ code and click Run!
-say "Hello, World!"
-
-set fruit to "apple"
-set score to 10
-
-instruction to cheer using times:
-    repeat times times:
-        say "Crim+ is awesome!" in crimson
-    end repeat
-end instruction
-
-if fruit is "apple" and score >= 10, then do:
-    say "Apples are red! Score: ", then score
-    perform cheer using 2
-end if`,
-
-      fib: `# Recursive instructions with 'give back'
-instruction to fibonacci using n:
-    if n <= 1, then do:
-        give back n
-    end if
-    set a to fibonacci with n - 1
-    set b to fibonacci with n - 2
-    give back a + b
-end instruction
-
-set i to 0
-as long as i <= 8, do:
-    set val to fibonacci with i
-    say "fib(", then i, then ") = ", then val
-    change i by 1
-end while`,
-
-      shapes: `# Render shapes right in the browser preview!
+const EXAMPLES = {
+  catch_star: `# Catch the Star — Move with Left/Right Arrow Keys!
 use display
+use random
+
+display width is 760
+display height is 320
+display background is "#111116"
 open display
 
-banner is shape, details are:
-    shape is 4 sides
-    width is 220
-    height is 70
-    color is crimson
-    position is center
-end banner details
-display banner
+set score to 0
 
-orb is shape, details are:
+hero is image, details are:
+    picture is "hero.png"
+    width is 50
+    height is 50
+    position is bottom
+end hero details
+
+star is image, details are:
+    picture is "star.png"
+    width is 40
+    height is 40
+    position is top
+end star details
+
+score_text is text, details are:
+    text says "Score: ", then score
+    size is 22
+    color is white
+    position is 16 pixels from left, 14 pixels from top
+end score_text details
+
+display hero
+display star
+display score_text
+
+when left arrow is held, do:
+    move hero left 7 pixels
+end when
+
+when right arrow is held, do:
+    move hero right 7 pixels
+end when
+
+always, do:
+    move star down 3.5 pixels
+    if y of star > 285, then do:
+        set x of star to random number between 30 and 700
+        set y of star to 10
+    end if
+end always
+
+when hero touches star, do:
+    change score by 1
+    say "Caught a star! Score: ", then score
+    set x of star to random number between 30 and 700
+    set y of star to 10
+end when
+`,
+
+  bouncing_ball: `# Bouncing Ball
+use display
+
+display width is 760
+display height is 320
+display background is "#111116"
+open display
+
+set vx to 5
+set vy to 4
+
+ball is shape, details are:
     shape is circle
     width is 44
     height is 44
+    color is crimson
+    position is center
+end ball details
+
+display ball
+
+always, do:
+    move ball right vx
+    move ball down vy
+
+    if x of ball > 714 or x of ball < 2, then do:
+        set vx to -vx
+    end if
+
+    if y of ball > 274 or y of ball < 2, then do:
+        set vy to -vy
+    end if
+end always
+`,
+
+  orbit_shapes: `# Orbital Shapes & Particles
+use display
+
+display width is 760
+display height is 320
+display background is "#111116"
+open display
+
+sun is shape, details are:
+    shape is circle
+    width is 70
+    height is 70
     color is gold
-    position is top left
-end orb details
-display orb
-move orb right 45 pixels
-move orb down 68 pixels
+    position is center
+    when clicked, do:
+        burst sparks at sun
+        say "Solar flare!"
+end sun details
 
-say "Rendered crimson banner & gold orb!" in gold`
-    };
+planet is shape, details are:
+    shape is circle
+    width is 26
+    height is 26
+    color is rose
+    position is center
+end planet details
 
-    const editor = document.getElementById('crim-editor');
-    const consoleEl = document.getElementById('pg-console');
-    const canvasWrap = document.getElementById('pg-canvas-wrap');
-    const canvas = document.getElementById('pg-canvas');
-    const ctx = canvas.getContext('2d');
+sparks is particles, details are:
+    color is gold, orange, red
+    size is 4 to 8
+    amount is 30
+    speed is 70 to 190
+    lifetime is 0.5 to 1.1
+    fade out
+    shrink
+end sparks details
 
-    function loadPreset(key, btn) {
-      editor.value = PRESETS[key];
-      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-      if (btn) btn.classList.add('active');
-      runCrimPlayground();
-    }
+display sun
+display planet
 
-    function clearOutput() {
-      consoleEl.innerHTML = '';
-      canvasWrap.style.display = 'none';
-    }
+orbit planet around sun
+stream sparks from planet
+`
+};
 
-    const COLOR_MAP = {
-      crimson: '#dc143c', red: '#ff1e42', gold: '#ffc800', yellow: '#ffe600',
-      green: '#00c800', blue: '#1e64ff', purple: '#a020f0', white: '#ffffff',
-      black: '#000000', orange: '#ff8c00', pink: '#ff69b4', cyan: '#00dcdc',
-      gray: '#969696', grey: '#969696'
-    };
 
-    class ReturnSignal { constructor(v) { this.value = v; } }
-    class StopSignal {}
+/**
+ * ============================================================================
+ * CRIM+ v1.6.0 INTERPRETER & CANVAS RUNTIME ENGINE
+ * ============================================================================
+ */
+class CrimError extends Error {
+  constructor(message, line = null) {
+    super(message);
+    this.name = "CrimError";
+    this.line = line;
+  }
+}
 
-    function runCrimPlayground() {
-      consoleEl.innerHTML = '';
-      canvasWrap.style.display = 'none';
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+class StopSignal extends Error {
+  constructor(line) { super("stop"); this.line = line; }
+}
 
-      const rawLines = editor.value.split(/\r?\n/);
-      const lines = [];
-      rawLines.forEach((raw, idx) => {
-        let out = '', inQ = false;
-        for (const ch of raw) {
-          if (ch === '"') inQ = !inQ;
-          if (ch === '#' && !inQ) break;
-          out += ch;
-        }
-        const trimmed = out.trim();
-        if (trimmed) lines.push({ text: trimmed, num: idx + 1 });
-      });
+class ReturnSignal extends Error {
+  constructor(value) { super("return"); this.value = value; }
+}
 
-      const env = {};
-      const defs = {};
-      const elements = {};
-      const scene = [];
-      let displayOpen = false;
-      let steps = 0;
+const COLORS = {
+  purple: [160, 32, 240], red: [255, 0, 0], green: [0, 200, 0],
+  blue: [30, 100, 255], yellow: [255, 230, 0], orange: [255, 140, 0],
+  pink: [255, 105, 180], white: [255, 255, 255], black: [0, 0, 0],
+  gray: [150, 150, 150], grey: [150, 150, 150], cyan: [0, 220, 220],
+  magenta: [255, 0, 255], brown: [140, 80, 30], teal: [0, 140, 140],
+  gold: [255, 200, 0], navy: [0, 0, 128], crimson: [220, 20, 60],
+  maroon: [128, 0, 0], darkred: [139, 0, 0], coral: [255, 127, 80],
+  salmon: [250, 128, 114], rose: [255, 0, 127], peach: [255, 218, 185],
+  khaki: [240, 230, 140], beige: [245, 245, 220], sand: [194, 178, 128],
+  chocolate: [210, 105, 30], lime: [50, 255, 50], mint: [152, 255, 152],
+  lightgreen: [144, 238, 144], darkgreen: [0, 100, 0], olive: [128, 128, 0],
+  skyblue: [135, 206, 235], lightblue: [173, 216, 230], darkblue: [0, 0, 139],
+  dodgerblue: [30, 144, 255], turquoise: [64, 224, 208], indigo: [75, 0, 130],
+  violet: [238, 130, 238], lavender: [230, 230, 250], plum: [221, 160, 221],
+  silver: [192, 192, 192], lightgray: [200, 200, 200], lightgrey: [200, 200, 200],
+  darkgray: [90, 90, 90], darkgrey: [90, 90, 90]
+};
 
-      function logLine(txt, color) {
-        const div = document.createElement('div');
-        div.textContent = txt;
-        if (color && COLOR_MAP[color.toLowerCase()]) div.style.color = COLOR_MAP[color.toLowerCase()];
-        else if (color && /^#[0-9a-f]{6}$/i.test(color)) div.style.color = color;
-        consoleEl.appendChild(div);
+const POSITIONS = {
+  "center": [0.5, 0.5], "top": [0.5, 0.0], "bottom": [0.5, 1.0],
+  "left": [0.0, 0.5], "right": [1.0, 0.5],
+  "top left": [0.0, 0.0], "top right": [1.0, 0.0],
+  "bottom left": [0.0, 1.0], "bottom right": [1.0, 1.0]
+};
+
+const MODULES = new Set(["time", "display", "sound", "random", "tilemap"]);
+const STATEMENT_STARTERS = new Set([
+  "say", "set", "change", "move", "play", "loop", "make", "wait", "stalk", "orbit", "patrol", "run", "perform",
+  "stop", "clear", "text", "if", "repeat", "forever", "until", "always", "when", "display", "open", "this",
+  "instruction", "definition", "add", "remove", "empty", "sort", "write", "read", "delete", "every", "after",
+  "give", "build", "put", "hide", "show", "burst", "stream", "slide", "use", "create", "plug", "place"
+]);
+
+const KEY_ALIASES = {
+  "right": "right arrow", "arrowright": "right arrow",
+  "left": "left arrow", "arrowleft": "left arrow",
+  "up": "up arrow", "arrowup": "up arrow",
+  "down": "down arrow", "arrowdown": "down arrow",
+  "return": "enter", "spacebar": "space", " ": "space",
+  "esc": "escape", "control": "ctrl", "ctl": "ctrl"
+};
+
+const EASINGS = {
+  "linear": t => t,
+  "smooth": t => -(Math.cos(Math.PI * t) - 1) / 2,
+  "ease": t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2,
+  "ease in": t => t * t,
+  "ease out": t => 1 - (1 - t) * (1 - t),
+  "ease in out": t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2,
+  "bounce": t => {
+    const n1 = 7.5625, d1 = 2.75;
+    if (t < 1 / d1) return n1 * t * t;
+    if (t < 2 / d1) return n1 * (t -= 1.5 / d1) * t + 0.75;
+    if (t < 2.5 / d1) return n1 * (t -= 2.25 / d1) * t + 0.9375;
+    return n1 * (t -= 2.625 / d1) * t + 0.984375;
+  },
+  "bounce out": t => EASINGS["bounce"](t),
+  "elastic": t => t === 0 || t === 1 ? t : Math.pow(2, -10 * t) * Math.sin((10 * t - 0.75) * (2 * Math.PI / 3)) + 1,
+  "elastic out": t => EASINGS["elastic"](t)
+};
+
+function rgbToCss(rgb, alpha = 1) {
+  if (!rgb) return `rgba(255,255,255,${alpha})`;
+  return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`;
+}
+
+function resolveColor(text, line) {
+  const t = String(text).trim().toLowerCase();
+  if (/^#[0-9a-f]{6}$/.test(t)) {
+    return [parseInt(t.slice(1, 3), 16), parseInt(t.slice(3, 5), 16), parseInt(t.slice(5, 7), 16)];
+  }
+  if (/^#[0-9a-f]{3}$/.test(t)) {
+    return [parseInt(t[1] + t[1], 16), parseInt(t[2] + t[2], 16), parseInt(t[3] + t[3], 16)];
+  }
+  if (COLORS[t]) return COLORS[t];
+  throw new CrimError(`Line ${line}: Unknown color '${text}'.`, line);
+}
+
+function showVal(v) {
+  if (Array.isArray(v)) return "[" + v.map(showVal).join(", ") + "]";
+  if (typeof v === "number") {
+    if (Number.isInteger(v) && Math.abs(v) < 1e15) return String(v);
+    return Number(v.toPrecision(10)).toString();
+  }
+  return String(v);
+}
+
+function toNumber(v) {
+  if (typeof v === "number" && !Number.isNaN(v)) return v;
+  if (typeof v === "string" && /^\s*-?\d+(\.\d+)?\s*$/.test(v)) return parseFloat(v);
+  return null;
+}
+
+function unquote(text) {
+  const s = text.trim();
+  if (s.startsWith('"') && s.endsWith('"') && s.length >= 2) {
+    return s.slice(1, -1).replace(/\\n/g, "\n").replace(/\\"/g, '"').replace(/\\\\/g, "\\");
+  }
+  return s;
+}
+
+function stripComment(line) {
+  let out = "", inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') inQuotes = !inQuotes;
+    if (ch === "#" && !inQuotes) break;
+    out += ch;
+  }
+  return out.trim();
+}
+
+function loadLines(source) {
+  const lines = [];
+  source.split(/\r?\n/).forEach((raw, idx) => {
+    const text = stripComment(raw);
+    if (text) lines.push({ text, number: idx + 1 });
+  });
+  return lines;
+}
+
+function splitJoined(text, line) {
+  const pieces = [];
+  let start = 0, inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === '"') inQuotes = !inQuotes;
+    if (!inQuotes && text[i] === ",") {
+      const m = text.slice(i + 1).match(/^\s*then\b/);
+      if (m) {
+        pieces.push(text.slice(start, i).trim());
+        i += m[0].length;
+        start = i + 1;
       }
+    }
+  }
+  pieces.push(text.slice(start).trim());
+  if (pieces.some(p => !p)) throw new CrimError(`Line ${line}: Missing value around ', then'.`, line);
+  return pieces;
+}
 
-      function splitJoined(expr) {
-        const parts = [];
-        let start = 0, inQ = false;
-        for (let i = 0; i < expr.length; i++) {
-          if (expr[i] === '"') inQ = !inQ;
-          if (!inQ && expr.slice(i).match(/^,\s*then\b/)) {
-            parts.push(expr.slice(start, i).trim());
-            const m = expr.slice(i).match(/^,\s*then\b/);
+function splitArgs(text) {
+  const pieces = [];
+  let start = 0, inQuotes = false, depth = 0;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '"') inQuotes = !inQuotes;
+    else if (!inQuotes) {
+      if (ch === "(") depth++;
+      else if (ch === ")") depth = Math.max(0, depth - 1);
+      else if (depth === 0) {
+        const sub = text.slice(i);
+        const before = text.slice(start, i);
+        const isRandomAnd = /random number between\s+[^,]+$/i.test(before) && /^\s+and\b/i.test(sub);
+        if (!isRandomAnd) {
+          const m = sub.match(/^(?:\s*,\s*|\s+and\s+)/i);
+          if (m) {
+            pieces.push(text.slice(start, i).trim());
             i += m[0].length - 1;
             start = i + 1;
           }
         }
-        parts.push(expr.slice(start).trim());
-        return parts;
       }
+    }
+  }
+  pieces.push(text.slice(start).trim());
+  return pieces;
+}
 
-      function evalExpr(expr, lineNum) {
-        expr = expr.trim();
-        if (/^"[^"]*"$/.test(expr)) return expr.slice(1, -1);
-        const rnd = expr.match(/^random number between\s+(-?\d+)\s+and\s+(-?\d+)$/);
-        if (rnd) {
-          const a = parseInt(rnd[1], 10), b = parseInt(rnd[2], 10);
-          return Math.floor(Math.random() * (b - a + 1)) + a;
-        }
-        const callWith = expr.match(/^([A-Za-z_]\w*)\s+with\s+(.+)$/);
-        if (callWith && defs[callWith[1]]) {
-          const args = callWith[2].split(/\s*,\s*|\s+and\s+/).map(a => evalExpr(a, lineNum));
-          return callDef(callWith[1], args, lineNum);
-        }
-        const runCall = expr.match(/^(?:run|perform)\s+([A-Za-z_]\w*)(?:\s+using\s+(.+))?$/);
-        if (runCall && defs[runCall[1]]) {
-          const args = runCall[2] ? runCall[2].split(/\s*,\s*|\s+and\s+/).map(a => evalExpr(a, lineNum)) : [];
-          return callDef(runCall[1], args, lineNum);
-        }
-        // Replace variables & math functions safely
-        const replaced = expr
-          .replace(/\bsqrt\s+([A-Za-z0-9_.]+)/g, 'Math.sqrt($1)')
-          .replace(/\babs\s+([A-Za-z0-9_.]+)/g, 'Math.abs($1)')
-          .replace(/\^/g, '**')
-          .replace(/\bmod\b/g, '%')
-          .replace(/\b[A-Za-z_]\w*\b/g, (tok) => {
-            if (tok === 'Math' || tok === 'sqrt' || tok === 'abs') return tok;
-            if (tok in env) return typeof env[tok] === 'string' ? JSON.stringify(env[tok]) : env[tok];
-            if (tok in defs) return JSON.stringify(callDef(tok, [], lineNum));
-            throw new Error(`Line ${lineNum}: I don't know what '${tok}' is yet.`);
-          });
-        try {
-          return Function('"use strict"; return (' + replaced + ')')();
-        } catch (e) {
-          throw new Error(`Line ${lineNum}: I couldn't calculate '${expr}'.`);
-        }
+function splitLogic(text, word) {
+  const pieces = [];
+  let start = 0, inQuotes = false;
+  const needle = ` ${word} `;
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === '"') inQuotes = !inQuotes;
+    else if (!inQuotes && text.slice(i, i + needle.length).toLowerCase() === needle) {
+      const before = text.slice(start, i);
+      const isRandomAnd = word === "and" && /random number between\s+\S+$/i.test(before);
+      if (!isRandomAnd) {
+        pieces.push(text.slice(start, i).trim());
+        i += needle.length - 1;
+        start = i + 1;
       }
+    }
+  }
+  pieces.push(text.slice(start).trim());
+  return pieces;
+}
 
-      function evalJoined(expr, lineNum) {
-        const parts = splitJoined(expr);
-        if (parts.length === 1) return evalExpr(parts[0], lineNum);
-        return parts.map(p => String(evalExpr(p, lineNum))).join('');
+function tokenizeMath(text, line) {
+  const tokens = [];
+  let pos = 0;
+  const rx = /\s*(?:(3rt|sqrt|sin|cos|tan|abs|round|floor|ceil)(?![A-Za-z0-9_])|(\bof\b|\bmod\b|[-+*/^%()\[\]])|(\d+(?:\.\d+)?)|([A-Za-z_]\w*))/y;
+  while (pos < text.length) {
+    rx.lastIndex = pos;
+    const m = rx.exec(text);
+    if (!m) throw new CrimError(`Line ${line}: I can't read ${JSON.stringify(text)}.`, line);
+    if (m[1]) tokens.push({ type: "func", val: m[1] });
+    else if (m[2]) tokens.push({ type: "op", val: m[2] });
+    else if (m[3]) tokens.push({ type: "num", val: parseFloat(m[3]) });
+    else if (m[4]) tokens.push({ type: "name", val: m[4] });
+    pos = rx.lastIndex;
+  }
+  if (!tokens.length) throw new CrimError(`Line ${line}: Empty expression.`, line);
+  return tokens;
+}
+
+class MathParser {
+  constructor(tokens, source, line) {
+    this.tokens = tokens;
+    this.source = source;
+    this.line = line;
+    this.i = 0;
+  }
+  peek() { return this.tokens[this.i] || { type: null, val: null }; }
+  take() { return this.tokens[this.i++] || { type: null, val: null }; }
+  fail() { throw new CrimError(`Line ${this.line}: Invalid expression '${this.source}'.`, this.line); }
+  parse() {
+    const node = this.expr();
+    if (this.i !== this.tokens.length) this.fail();
+    return node;
+  }
+  expr() {
+    let node = this.term();
+    while (this.peek().type === "op" && (this.peek().val === "+" || this.peek().val === "-")) {
+      node = ["bin", this.take().val, node, this.term()];
+    }
+    return node;
+  }
+  term() {
+    let node = this.unary();
+    while (this.peek().type === "op" && ["*", "/", "%", "mod"].includes(this.peek().val)) {
+      node = ["bin", this.take().val, node, this.unary()];
+    }
+    return node;
+  }
+  unary() {
+    if (this.peek().type === "op" && this.peek().val === "-") { this.take(); return ["neg", this.unary()]; }
+    if (this.peek().type === "op" && this.peek().val === "+") { this.take(); return this.unary(); }
+    return this.power();
+  }
+  power() {
+    const base = this.atom();
+    if (this.peek().type === "op" && this.peek().val === "^") { this.take(); return ["bin", "^", base, this.unary()]; }
+    return base;
+  }
+  atom() {
+    const tok = this.take();
+    if (tok.type === "num") return ["num", tok.val];
+    if (tok.type === "name") {
+      const nxt = this.peek();
+      if (tok.val === "item" && (nxt.type === "num" || nxt.type === "name" || (nxt.type === "op" && nxt.val === "(")) && !(nxt.type === "name" && nxt.val === "that")) {
+        const idxNode = nxt.type === "name" ? ["var", this.take().val] : this.atom();
+        const ofTok = this.take();
+        if (ofTok.type !== "op" || ofTok.val !== "of") this.fail();
+        return ["at", this.atom(), idxNode];
       }
-
-      function evalCond(cond, lineNum) {
-        if (/\bor\b/.test(cond)) return cond.split(/\s+or\s+/).some(c => evalCond(c, lineNum));
-        if (/\band\b/.test(cond)) return cond.split(/\s+and\s+/).every(c => evalCond(c, lineNum));
-        const m = cond.match(/^(.+?)\s*(<=|>=|!=|<|>|=|\bis not\b|\bis\b)\s*(.+)$/);
-        if (!m) throw new Error(`Line ${lineNum}: I don't understand the condition '${cond}'.`);
-        const a = evalExpr(m[1], lineNum);
-        const b = evalExpr(m[3], lineNum);
-        const op = m[2].trim();
-        if (op === '=' || op === 'is') return a == b;
-        if (op === '!=' || op === 'is not') return a != b;
-        if (op === '<') return Number(a) < Number(b);
-        if (op === '>') return Number(a) > Number(b);
-        if (op === '<=') return Number(a) <= Number(b);
-        if (op === '>=') return Number(a) >= Number(b);
-        return false;
+      if (this.peek().type === "op" && this.peek().val === "[") {
+        this.take();
+        const idxNode = this.expr();
+        const closeTok = this.take();
+        if (closeTok.type !== "op" || closeTok.val !== "]") this.fail();
+        return ["index", tok.val, idxNode];
       }
-
-      function callDef(name, args, lineNum) {
-        const fn = defs[name];
-        if (!fn) throw new Error(`Line ${lineNum}: I don't know an instruction called '${name}'.`);
-        const saved = {};
-        fn.params.forEach((p, idx) => {
-          if (p in env) saved[p] = env[p];
-          env[p] = args[idx];
-        });
-        let ret = 0;
-        try {
-          execBlock(fn.body);
-        } catch (e) {
-          if (e instanceof ReturnSignal) ret = e.value;
-          else throw e;
-        } finally {
-          fn.params.forEach((p) => {
-            if (p in saved) env[p] = saved[p];
-            else delete env[p];
-          });
+      if (this.peek().type === "op" && this.peek().val === "of") {
+        this.take();
+        let propNode;
+        if (this.peek().type === "name" && this.peek().val === "that") {
+          this.take();
+          const t = this.take();
+          if (t.type !== "name") this.fail();
+          propNode = ["var", t.val];
+        } else {
+          propNode = this.atom();
         }
-        return ret;
+        if (propNode[0] === "var") return ["prop", propNode[1], tok.val];
+        return ["field", propNode, tok.val];
       }
+      return ["var", tok.val];
+    }
+    if (tok.type === "func") {
+      if (this.peek().type === "op" && this.peek().val === "-") { this.take(); return ["func", tok.val, ["neg", this.atom()]]; }
+      return ["func", tok.val, this.atom()];
+    }
+    if (tok.type === "op" && tok.val === "(") {
+      const node = this.expr();
+      const close = this.take();
+      if (close.type !== "op" || close.val !== ")") this.fail();
+      return node;
+    }
+    this.fail();
+  }
+}
 
-      function parseBlock(idx, endRegex) {
-        const body = [];
-        while (idx < lines.length) {
-          if (endRegex && endRegex.test(lines[idx].text)) {
-            return { body, next: idx + 1 };
-          }
-          body.push(lines[idx]);
-          idx++;
-        }
-        if (endRegex) throw new Error(`Unclosed block near line ${body[0]?.num || 1}.`);
-        return { body, next: idx };
+function parseOperand(text, line) {
+  const s = text.trim();
+  const qm = s.match(/^"((?:\\.|[^"\\])*)"$/);
+  if (qm) return ["text", unquote(s)];
+
+  const rndM = s.match(/^random number between\s+(.+?)\s+and\s+(.+)$/i);
+  if (rndM) return ["random_expr", parseOperand(rndM[1], line), parseOperand(rndM[2], line)];
+
+  const rndItemM = s.match(/^random item from\s+(\w+)$/i);
+  if (rndItemM) return ["random_item", rndItemM[1]];
+
+  const mouseM = s.match(/^mouse\s+(tile\s+x|tile\s+y|x|y)$/i);
+  if (mouseM) return ["mouse", mouseM[1].toLowerCase().replace(/\s+/g, "_")];
+
+  const tileAtM = s.match(/^tile\s+at\s*\(\s*([^,()]+?)\s*,\s*([^()]+?)\s*\)$/i);
+  if (tileAtM) return ["tile_at", parseOperand(tileAtM[1], line), parseOperand(tileAtM[2], line)];
+
+  const winM = s.match(/^display\s+(width|height)$/i);
+  if (winM) return ["window_size", winM[1].toLowerCase()];
+
+  const aggM = s.match(/^(sum|average|smallest|largest) of\s+(.+)$/i);
+  if (aggM) return ["agg", aggM[1].toLowerCase(), splitArgs(aggM[2]).map(a => parseOperand(a, line))];
+
+  const runM = s.match(/^(?:run|perform)\s+(\w+)(?:\s+using\s+(.+))?$/i);
+  if (runM) return ["call", runM[1], runM[2] ? splitArgs(runM[2]).map(a => parseOperand(a, line)) : []];
+
+  const textFnM = s.match(/^(length|uppercase|lowercase|trim) of\s+(.+)$/i);
+  if (textFnM) return ["textfn", textFnM[1].toLowerCase(), parseOperand(textFnM[2], line)];
+
+  const splitM = s.match(/^split\s+(.+?)\s+by\s+(.+)$/i);
+  if (splitM) return ["split", parseOperand(splitM[1], line), parseOperand(splitM[2], line)];
+
+  const joinM = s.match(/^join\s+(\w+)\s+with\s+(.+)$/i);
+  if (joinM) return ["join", joinM[1], parseOperand(joinM[2], line)];
+
+  const withCallM = s.match(/^([A-Za-z_]\w*)\s+with\s+(.+)$/i);
+  if (withCallM && !STATEMENT_STARTERS.has(withCallM[1].toLowerCase())) {
+    return ["call", withCallM[1], splitArgs(withCallM[2]).map(a => parseOperand(a, line))];
+  }
+
+  return new MathParser(tokenizeMath(s, line), s, line).parse();
+}
+
+function parseTarget(text, line) {
+  const t = text.trim();
+  const tm = t.match(/^that\s+(\w+)$/i);
+  if (tm) return ["that", tm[1]];
+  if (/^[A-Za-z_]\w*$/.test(t)) return ["name", t];
+  throw new CrimError(`Line ${line}: Unknown target '${t}'.`, line);
+}
+
+function parseCondition(text, line) {
+  const s = text.trim();
+  for (const [word, kind] of [["or", "or"], ["and", "and"]]) {
+    const pieces = splitLogic(s, word);
+    if (pieces.length > 1) return [kind, pieces.map(p => parseCondition(p, line))];
+  }
+  if (/^not\s+/i.test(s)) return ["not", parseCondition(s.replace(/^not\s+/i, ""), line)];
+
+  const touchM = s.match(/^((?:that\s+)?\w+)\s+(?:is\s+(not\s+)?touching|touches)\s+((?:that\s+)?\w+)$/i);
+  if (touchM) return ["touching", parseTarget(touchM[1], line), parseTarget(touchM[3], line), Boolean(touchM[2])];
+
+  const unaries = [
+    [" is not a color", "not color"], [" is a color", "color"],
+    [" is not a number", "not number"], [" is a number", "number"],
+    [" contains letters", "letters"]
+  ];
+  for (const [suffix, kind] of unaries) {
+    if (s.toLowerCase().endsWith(suffix)) return [kind, parseOperand(s.slice(0, -suffix.length), line)];
+  }
+
+  const membership = [
+    [/^(.+?)\s+does not contain\s+(.+)$/i, "not contains"],
+    [/^(.+?)\s+contains\s+(.+)$/i, "contains"],
+    [/^(.+?)\s+starts with\s+(.+)$/i, "starts"],
+    [/^(.+?)\s+ends with\s+(.+)$/i, "ends"]
+  ];
+  for (const [rx, kind] of membership) {
+    const m = s.match(rx);
+    if (m) return [kind, parseOperand(m[1], line), parseOperand(m[2], line)];
+  }
+
+  const compM = s.match(/^(.+?)\s*(<\s*or\s*=|>\s*or\s*=|<=|>=|!=|<|>|=|\s+is not\s+|\s+is\s+)\s*(.+)$/i);
+  if (!compM) throw new CrimError(`Line ${line}: Invalid condition '${s}'.`, line);
+  return ["compare", compM[2].replace(/\s+/g, "").toLowerCase(), parseOperand(compM[1], line), parseOperand(compM[3], line)];
+}
+
+function parseShape(value, line) {
+  const m = value.trim().toLowerCase().match(/^(?:(\d+)\s+sides?|(circle|oval|ellipse|square|triangle))$/);
+  if (!m) throw new CrimError(`Line ${line}: Unknown shape '${value}'.`, line);
+  if (m[2]) {
+    if (m[2] === "square") return ["polygon", 4];
+    if (m[2] === "triangle") return ["polygon", 3];
+    return ["circle", 0];
+  }
+  const sides = parseInt(m[1], 10);
+  if (sides < 3) throw new CrimError(`Line ${line}: A shape needs at least 3 sides.`, line);
+  return ["polygon", sides];
+}
+
+function normalizeKey(text) {
+  let k = text.trim().toLowerCase().replace(/^the\s+/, "").replace(/\s+key$/, "");
+  return KEY_ALIASES[k] || k;
+}
+
+function parseKeyCondition(text, defaultMode) {
+  const groups = [];
+  for (const chunk of splitLogic(text.trim(), "or")) {
+    const terms = splitLogic(chunk, "and").map(piece => {
+      let mode = defaultMode, p = piece.trim();
+      const km = p.match(/^(.+?)\s+is\s+(pressed|held)$/i);
+      if (km) { p = km[1]; mode = km[2].toLowerCase(); }
+      return ["key", normalizeKey(p), mode];
+    });
+    groups.push(terms.length === 1 ? terms[0] : ["and", terms]);
+  }
+  return groups.length === 1 ? groups[0] : ["or", groups];
+}
+
+function parseProgram(lines) {
+  const expanded = [];
+  for (const l of lines) {
+    const m = l.text.match(/^(?:this script uses:\s*|use\s+)(\w+(?:\s*(?:,\s*and\s+|,|\s+and\s+)\s*\w+)+)$/i);
+    if (m) {
+      for (const mod of m[1].split(/\s*(?:,\s*and\s+|,|\s+and\s+)\s*/)) {
+        expanded.push({ text: `use ${mod.trim()}`, number: l.number });
       }
+    } else {
+      expanded.push(l);
+    }
+  }
+  const res = parseBlock(expanded, 0, null);
+  if (res.pos < expanded.length) {
+    throw new CrimError(`Line ${expanded[res.pos].number}: Unexpected '${expanded[res.pos].text}'.`, expanded[res.pos].number);
+  }
+  return res.stmts;
+}
 
-      function execBlock(block) {
-        let i = 0;
-        while (i < block.length) {
-          if (++steps > 5000) throw new Error("Stopped: loop ran over 5,000 steps.");
-          const { text, num } = block[i];
+function parseBlock(lines, pos, opener, hint = null) {
+  const stmts = [];
+  while (pos < lines.length) {
+    const { text } = lines[pos];
+    if (/^(but if\b|anything else\b)/i.test(text) || /^end\s+(if|repeat|forever|while|always|when|for each|definition|instruction|every|after)\b/i.test(text) || /^end\s+\w+\s+(?:details|definition)$/i.test(text)) {
+      return { stmts, pos };
+    }
+    if (opener && opener.kind === "click handler" && /^when\s+(?:(left|right|middle)\s+)?clicked\s*,?\s*do:?$/i.test(text)) {
+      return { stmts, pos };
+    }
+    const parsed = parseStatement(lines, pos);
+    stmts.push(parsed.stmt);
+    pos = parsed.pos;
+  }
+  if (opener) {
+    throw new CrimError(`Line ${opener.line}: This ${opener.kind} block was never closed. ${hint || `Add 'end ${opener.kind}'.`}`, opener.line);
+  }
+  return { stmts, pos };
+}
 
-          if (/^use\s+/.test(text)) { i++; continue; }
-          if (text === 'open display') { displayOpen = true; canvasWrap.style.display = 'block'; i++; continue; }
+function expectEnd(lines, pos, kind, openLine) {
+  if (pos >= lines.length) throw new CrimError(`Line ${openLine}: Expected 'end ${kind}'.`, openLine);
+  const { text, number } = lines[pos];
+  const m = text.match(/^end\s+(if|repeat|forever|while|always|when|for each|definition|instruction|every|after)$/i);
+  if (!m || m[1].toLowerCase() !== kind.toLowerCase()) {
+    throw new CrimError(`Line ${number}: Expected 'end ${kind}', found '${text}'.`, number);
+  }
+  return pos + 1;
+}
 
-          const elMatch = text.match(/^(\w+)\s+is\s+shape\s*,\s*details are:?$/);
-          if (elMatch) {
-            const name = elMatch[1];
-            const spec = { shape: 'rect', width: 50, height: 50, color: 'crimson', position: 'center', dx: 0, dy: 0 };
-            i++;
-            while (i < block.length && !new RegExp(`^end\s+${name}\s+details$`).test(block[i].text)) {
-              const d = block[i].text;
-              if (/^shape\s+is\s+circle$/i.test(d)) spec.shape = 'circle';
-              const wm = d.match(/^width\s+is\s+(\d+)/); if (wm) spec.width = parseInt(wm[1], 10);
-              const hm = d.match(/^height\s+is\s+(\d+)/); if (hm) spec.height = parseInt(hm[1], 10);
-              const cm = d.match(/^color\s+is\s+(\w+)/); if (cm) spec.color = cm[1];
-              const pm = d.match(/^position\s+is\s+(.+)$/); if (pm) spec.position = pm[1].trim();
-              i++;
-            }
-            elements[name] = spec;
-            i++;
-            continue;
-          }
+function parseElement(lines, pos, name, kind, line) {
+  let spec;
+  if (kind === "tile") {
+    spec = { kind: "tile", w: 1, h: 1, texture: null, color: null, on_click: null, on_click_right: null, on_click_middle: null };
+  } else if (kind === "particles") {
+    spec = {
+      kind: "particles", position: "center", opacity: 1.0, dx: 0, dy: 0, rotation: 0,
+      colors: [[255, 255, 255]], size: [4, 4], amount: 20, rate: 30,
+      speed: [60, 160], lifetime: [0.6, 1.2], direction: 0, spread: 360,
+      gravity: 0, shape: ["circle", 0], fade: false, shrink: false
+    };
+  } else if (kind === "character") {
+    spec = { kind: "character" };
+  } else if (kind === "sound") {
+    spec = { kind: "sound", sound: null, volume: 1.0, speed: 1.0, pitch: 1.0, reverse: false };
+  } else {
+    spec = {
+      kind, position: "center", opacity: 1.0, on_click: null, on_click_right: null, on_click_middle: null,
+      dx: 0, dy: 0, rotation: 0, anchor: { h: "center", v: "center" }, pos_expr: {}
+    };
+    if (kind === "text") Object.assign(spec, { text: null, font: "Inter, sans-serif", size: 28, color: "white" });
+    else if (kind === "image") Object.assign(spec, { picture: null, width: null, height: null });
+    else if (kind === "list") Object.assign(spec, { items: [] });
+    else if (kind === "grid") Object.assign(spec, { rows: 3, columns: 3, gap: 10, shape: ["polygon", 4], width: 40, height: 40, color: "white" });
+    else Object.assign(spec, { shape: ["polygon", 4], width: 60, height: 60, color: "white" });
+  }
 
-          const dispMatch = text.match(/^display\s+(\w+)$/);
-          if (dispMatch) {
-            if (elements[dispMatch[1]] && !scene.includes(dispMatch[1])) scene.push(dispMatch[1]);
-            i++; continue;
-          }
+  const closer = new RegExp(`^end\\s+${name}\\s+(?:details|definition)$`, "i");
+  pos++;
+  while (pos < lines.length) {
+    const { text, number } = lines[pos];
+    if (closer.test(text)) {
+      if (kind === "text" && !spec.text) throw new CrimError(`Line ${line}: '${name}' needs a 'text says ...' line.`, line);
+      if (kind === "image" && !spec.picture) throw new CrimError(`Line ${line}: '${name}' needs a 'picture is "..."' line.`, line);
+      if (kind === "sound" && !spec.sound) throw new CrimError(`Line ${line}: '${name}' needs a 'sound is "..."' line.`, line);
+      return { stmt: ["element", name, spec, kind, line], pos: pos + 1 };
+    }
 
-          const moveMatch = text.match(/^move\s+(\w+)\s+(left|right|up|down)\s+(.+?)(?:\s+pixels?)?$/);
-          if (moveMatch) {
-            const spec = elements[moveMatch[1]];
-            const amt = Number(evalExpr(moveMatch[3], num));
-            if (spec) {
-              if (moveMatch[2] === 'right') spec.dx += amt;
-              if (moveMatch[2] === 'left') spec.dx -= amt;
-              if (moveMatch[2] === 'down') spec.dy += amt;
-              if (moveMatch[2] === 'up') spec.dy -= amt;
-            }
-            i++; continue;
-          }
+    const wm = text.match(/^when\s+(?:(left|right|middle)\s+)?clicked\s*,?\s*do:?$/i);
+    if (wm) {
+      const btn = (wm[1] || "left").toLowerCase();
+      const key = btn === "right" ? "on_click_right" : btn === "middle" ? "on_click_middle" : "on_click";
+      const blk = parseBlock(lines, pos + 1, { kind: "click handler", line: number }, `Add 'end ${name} details'.`);
+      spec[key] = blk.stmts;
+      pos = blk.pos;
+      continue;
+    }
 
-          const defMatch = text.match(/^(?:definition of|instruction to)\s+(\w+)(?:\s+using\s+(.+?))?\s*:?$/);
-          if (defMatch) {
-            const name = defMatch[1];
-            const params = defMatch[2] ? defMatch[2].split(/\s*,\s*|\s+and\s+/).map(s => s.trim()) : [];
-            let depth = 1, j = i + 1;
-            while (j < block.length && depth > 0) {
-              if (/^(?:definition of|instruction to)\b/.test(block[j].text)) depth++;
-              else if (/^end\s+(?:instruction|definition)\b/.test(block[j].text)) depth--;
-              j++;
-            }
-            defs[name] = { params, body: block.slice(i + 1, j - 1) };
-            i = j;
-            continue;
-          }
+    if (kind === "particles") { parseParticleDetail(text, number, spec); pos++; continue; }
+    if (kind === "tile") {
+      const sm = text.match(/^size\s+is\s+(\d+(?:\.\d+)?)\s*(?:x|by)\s*(\d+(?:\.\d+)?)$/i);
+      if (sm) { spec.w = parseFloat(sm[1]); spec.h = parseFloat(sm[2]); pos++; continue; }
+      const tm = text.match(/^texture\s+is\s+(.+)$/i);
+      if (tm) { spec.texture = unquote(tm[1]); pos++; continue; }
+    }
+    if (kind === "sound" && /^played (?:in )?reverse$/i.test(text)) { spec.reverse = true; pos++; continue; }
 
-          const ifMatch = text.match(/^if\s+(.+?)\s*,?\s*then do:?$/);
-          if (ifMatch) {
-            let depth = 1, j = i + 1;
-            const branches = [{ cond: ifMatch[1], body: [] }];
-            while (j < block.length && depth > 0) {
-              const t = block[j].text;
-              if (/^if\b/.test(t)) { depth++; branches[branches.length - 1].body.push(block[j]); }
-              else if (/^end\s+if$/.test(t)) {
-                depth--;
-                if (depth > 0) branches[branches.length - 1].body.push(block[j]);
-              } else if (depth === 1 && /^but if\s+(.+?)\s*,?\s*then do:?$/.test(t)) {
-                branches.push({ cond: t.match(/^but if\s+(.+?)\s*,?\s*then do:?$/)[1], body: [] });
-              } else if (depth === 1 && /^anything else\s*,?\s*do:?$/.test(t)) {
-                branches.push({ cond: null, body: [] });
-              } else {
-                branches[branches.length - 1].body.push(block[j]);
-              }
-              j++;
-            }
-            for (const br of branches) {
-              if (br.cond === null || evalCond(br.cond, num)) {
-                execBlock(br.body);
-                break;
-              }
-            }
-            i = j;
-            continue;
-          }
+    parseDetail(text, number, spec);
+    pos++;
+  }
+  throw new CrimError(`Line ${line}: '${name}' needs 'end ${name} details'.`, line);
+}
 
-          const repMatch = text.match(/^repeat\s+(.+?)(?:\s+times)?\s*:?$/);
-          if (repMatch) {
-            const count = Number(evalExpr(repMatch[1], num));
-            let depth = 1, j = i + 1;
-            while (j < block.length && depth > 0) {
-              if (/^repeat\b/.test(block[j].text)) depth++;
-              else if (/^end\s+repeat$/.test(block[j].text)) depth--;
-              j++;
-            }
-            const body = block.slice(i + 1, j - 1);
-            try {
-              for (let k = 0; k < count; k++) execBlock(body);
-            } catch (e) { if (!(e instanceof StopSignal)) throw e; }
-            i = j;
-            continue;
-          }
+function parseParticleDetail(text, line, spec) {
+  let m;
+  if ((m = text.match(/^colou?rs?\s+(?:is|are)\s+(.+)$/i))) {
+    spec.colors = m[1].split(",").map(s => resolveColor(unquote(s.trim()), line));
+  } else if ((m = text.match(/^size\s+is\s+(\d+(?:\.\d+)?)(?:\s*(?:to|-)\s*(\d+(?:\.\d+)?))?/i))) {
+    const a = parseFloat(m[1]), b = m[2] ? parseFloat(m[2]) : a;
+    spec.size = [Math.min(a, b), Math.max(a, b)];
+  } else if ((m = text.match(/^amount\s+is\s+(\d+)/i))) spec.amount = parseInt(m[1], 10);
+  else if ((m = text.match(/^rate\s+is\s+(\d+(?:\.\d+)?)/i))) spec.rate = parseFloat(m[1]);
+  else if ((m = text.match(/^speed\s+is\s+(\d+(?:\.\d+)?)(?:\s*(?:to|-)\s*(\d+(?:\.\d+)?))?/i))) {
+    const a = parseFloat(m[1]), b = m[2] ? parseFloat(m[2]) : a;
+    spec.speed = [Math.min(a, b), Math.max(a, b)];
+  } else if ((m = text.match(/^(?:lifetime|life)\s+is\s+(\d+(?:\.\d+)?)(?:\s*(?:to|-)\s*(\d+(?:\.\d+)?))?/i))) {
+    const a = parseFloat(m[1]), b = m[2] ? parseFloat(m[2]) : a;
+    spec.lifetime = [Math.min(a, b), Math.max(a, b)];
+  } else if ((m = text.match(/^direction\s+is\s+(.+)$/i))) {
+    const dirs = { up: 0, right: 90, down: 180, left: 270 };
+    const v = m[1].trim().toLowerCase();
+    spec.direction = v in dirs ? dirs[v] : parseFloat(v) || 0;
+  } else if ((m = text.match(/^spread\s+is\s+(\d+(?:\.\d+)?)/i))) spec.spread = parseFloat(m[1]);
+  else if ((m = text.match(/^gravity\s+is\s+(-?\d+(?:\.\d+)?)/i))) spec.gravity = parseFloat(m[1]);
+  else if ((m = text.match(/^shape\s+is\s+(.+)$/i))) spec.shape = parseShape(m[1], line);
+  else if (/^fade(?:s)?(?:\s+out)?$/i.test(text)) spec.fade = true;
+  else if (/^shrink(?:s)?(?:\s+away)?$/i.test(text)) spec.shrink = true;
+  else throw new CrimError(`Line ${line}: Unknown particle detail '${text}'.`, line);
+}
 
-          const whileMatch = text.match(/^(as long as|until)\s+(.+?)\s*,?\s*do:?$/);
-          if (whileMatch) {
-            let depth = 1, j = i + 1;
-            while (j < block.length && depth > 0) {
-              if (/^(?:as long as|until)\b/.test(block[j].text)) depth++;
-              else if (/^end\s+while$/.test(block[j].text)) depth--;
-              j++;
-            }
-            const body = block.slice(i + 1, j - 1);
-            try {
-              while (whileMatch[1] === 'as long as' ? evalCond(whileMatch[2], num) : !evalCond(whileMatch[2], num)) {
-                execBlock(body);
-              }
-            } catch (e) { if (!(e instanceof StopSignal)) throw e; }
-            i = j;
-            continue;
-          }
+function parseDetail(text, line, spec) {
+  const [head, ...mods] = text.split("|").map(s => s.trim());
+  const pf = head.match(/^position\s+from\s+(?:the\s+)?(left|right|top|bottom)\s+(?:is|are)\s+(.+)$/i);
+  if (pf) {
+    applyPositionParts(spec, [[pf[1].toLowerCase(), parseOperand(pf[2].replace(/\s*(?:pixels?|px)$/i, "").trim(), line)]], line);
+    return;
+  }
+  const m = head.match(/^(\w+)\s+(is|says|are)\s+(.+)$/i);
+  if (!m) throw new CrimError(`Line ${line}: Invalid detail '${text}'.`, line);
+  const key = m[1].toLowerCase(), val = m[3].trim();
 
-          if (text === 'stop') throw new StopSignal();
+  if (spec.kind === "character") {
+    if (val.startsWith('"') && val.endsWith('"')) spec[key] = unquote(val);
+    else { const n = toNumber(val); spec[key] = n !== null ? n : val; }
+    return;
+  }
+  if (key === "items") {
+    spec.items = val.replace(/^\[|\]$/g, "").split(",").map(x => x.trim()).filter(Boolean).map(x => toNumber(x) ?? unquote(x));
+    return;
+  }
+  if (key === "text") {
+    spec.text = val.toLowerCase() === "time"
+      ? ["time", { milliseconds: mods.some(md => /milliseconds/i.test(md)) }]
+      : ["expr", splitJoined(val, line).map(p => parseOperand(p, line))];
+    return;
+  }
+  if (key === "color") {
+    spec.color = unquote(val);
+    resolveColor(spec.color, line);
+    for (const mod of mods) {
+      const om = mod.match(/opacity\s+(?:being|is)\s+(\d+(?:\.\d+)?)\s*%/i);
+      if (om) spec.opacity = parseFloat(om[1]) / 100;
+    }
+    return;
+  }
+  if (spec.kind === "sound") {
+    if (key === "sound") spec.sound = unquote(val);
+    else if (key === "volume") spec.volume = parseFloat(val) / 100;
+    else if (key === "speed" || key === "pitch") spec[key] = parseFloat(val);
+    return;
+  }
+  if (key === "position") {
+    if (/\bfrom\b/i.test(val)) {
+      const parts = splitArgs(val).map(piece => {
+        const pm = piece.match(/^(?:at\s+)?(.+?)\s*(?:pixels?|px)?\s+from\s+(?:the\s+)?(left|right|top|bottom)$/i);
+        if (!pm) throw new CrimError(`Line ${line}: Invalid position '${val}'.`, line);
+        return [pm[2].toLowerCase(), parseOperand(pm[1], line)];
+      });
+      applyPositionParts(spec, parts, line);
+    } else {
+      let place = val.toLowerCase().replace(/^at\s+/, "").replace(/-/g, " ").replace(/\s+corner$/, "").trim();
+      if (!POSITIONS[place]) throw new CrimError(`Line ${line}: Unknown position '${val}'.`, line);
+      spec.anchor = { h: "center", v: "center" };
+      if (place.includes("left")) spec.anchor.h = "left";
+      if (place.includes("right")) spec.anchor.h = "right";
+      if (place.includes("top")) spec.anchor.v = "top";
+      if (place.includes("bottom")) spec.anchor.v = "bottom";
+      spec.pos_expr = {}; spec.dx = 0; spec.dy = 0; spec.position = place;
+    }
+  } else if (key === "opacity") spec.opacity = parseFloat(val.replace("%", "")) / 100;
+  else if (key === "rotation") spec.rotation = parseFloat(val.replace(/degrees?/i, "")) % 360;
+  else if (key === "font") spec.font = unquote(val);
+  else if (key === "size") spec.size = parseInt(val, 10);
+  else if (["width", "height", "rows", "columns", "gap"].includes(key)) spec[key] = parseInt(val, 10);
+  else if (key === "picture") spec.picture = unquote(val);
+  else if (key === "shape") spec.shape = parseShape(val, line);
+  else throw new CrimError(`Line ${line}: '${spec.kind}' doesn't support '${key}'.`, line);
+}
 
-          const retMatch = text.match(/^give back\s+(.+)$/);
-          if (retMatch) throw new ReturnSignal(evalExpr(retMatch[1], num));
+function applyPositionParts(spec, parts, line) {
+  for (const [side, node] of parts) {
+    const horiz = side === "left" || side === "right";
+    const axis = horiz ? "dx" : "dy";
+    spec.anchor[horiz ? "h" : "v"] = side;
+    const sign = (side === "left" || side === "top") ? 1 : -1;
+    delete spec.pos_expr[axis];
+    if (node[0] === "num") spec[axis] = sign * node[1];
+    else { spec[axis] = 0; spec.pos_expr[axis] = [sign, node, line]; }
+  }
+  const words = [];
+  if (spec.anchor.v !== "center") words.push(spec.anchor.v);
+  if (spec.anchor.h !== "center") words.push(spec.anchor.h);
+  spec.position = words.join(" ") || "center";
+}
 
-          const setMatch = text.match(/^set\s+(\w+)\s+to\s+(.+)$/);
-          if (setMatch) {
-            env[setMatch[1]] = evalJoined(setMatch[2], num);
-            i++; continue;
-          }
+function parseAnchor(text, line) {
+  const t = text.trim();
+  if (POSITIONS[t.toLowerCase()]) return ["place", t.toLowerCase()];
+  if (/^(?:that\s+)?[A-Za-z_]\w*$/.test(t)) return ["target", parseTarget(t, line)];
+  const pieces = splitArgs(t);
+  if (pieces.length === 2) return ["xy", parseOperand(pieces[0], line), parseOperand(pieces[1], line)];
+  throw new CrimError(`Line ${line}: Unknown position '${text}'.`, line);
+}
 
-          const chgMatch = text.match(/^change\s+(\w+)\s+by\s+(.+)$/);
-          if (chgMatch) {
-            env[chgMatch[1]] = Number(env[chgMatch[1]] || 0) + Number(evalExpr(chgMatch[2], num));
-            i++; continue;
-          }
+function parseStatement(lines, pos) {
+  const { text, number } = lines[pos];
+  let m;
 
-          const runMatch = text.match(/^(?:run|perform)\s+(\w+)(?:\s+using\s+(.+))?$/);
-          if (runMatch) {
-            const args = runMatch[2] ? runMatch[2].split(/\s*,\s*|\s+and\s+/).map(a => evalExpr(a, num)) : [];
-            callDef(runMatch[1], args, num);
-            i++; continue;
-          }
-
-          const sayMatch = text.match(/^say\s+(.+?)(?:\s+in\s+([A-Za-z#0-9]+))?$/);
-          if (sayMatch) {
-            logLine(String(evalJoined(sayMatch[1], num)), sayMatch[2] || null);
-            i++; continue;
-          }
-
-          throw new Error(`Line ${num}: I don't understand '${text}' in the web preview yet.`);
-        }
+  if (/^if\s+/i.test(text)) {
+    const startLine = number, clauses = [];
+    while (pos < lines.length) {
+      const cur = lines[pos];
+      if (/^anything else/i.test(cur.text)) {
+        const blk = parseBlock(lines, pos + 1, { kind: "if", line: startLine });
+        clauses.push([null, blk.stmts, cur.number]);
+        pos = expectEnd(lines, blk.pos, "if", startLine);
+        break;
       }
+      const im = cur.text.match(/^(?:but )?if\s+(.+?)\s*,?\s*then do:?$/i);
+      if (!im) throw new CrimError(`Line ${cur.number}: Invalid 'if' syntax.`, cur.number);
+      const blk = parseBlock(lines, pos + 1, { kind: "if", line: startLine });
+      clauses.push([parseCondition(im[1], cur.number), blk.stmts, cur.number]);
+      pos = blk.pos;
+      if (pos < lines.length && /^end\s+if$/i.test(lines[pos].text)) {
+        pos = expectEnd(lines, pos, "if", startLine);
+        break;
+      }
+    }
+    return { stmt: ["chain", clauses, startLine], pos };
+  }
 
+  if ((m = text.match(/^for each\s+(\w+)\s+in\s+(.+?)\s*,?\s*do:?$/i))) {
+    const blk = parseBlock(lines, pos + 1, { kind: "for each", line: number });
+    return { stmt: ["for_each", m[1], m[2].trim(), blk.stmts, number], pos: expectEnd(lines, blk.pos, "for each", number) };
+  }
+
+  if ((m = text.match(/^(?:this script uses:\s*|use\s+)(\w+)$/i))) {
+    const mod = m[1].toLowerCase();
+    if (!MODULES.has(mod)) throw new CrimError(`Line ${number}: Unknown module '${m[1]}'.`, number);
+    return { stmt: ["uses", mod, number], pos: pos + 1 };
+  }
+
+  if (/^open display$/i.test(text)) return { stmt: ["open_display", number], pos: pos + 1 };
+
+  if ((m = text.match(/^display\s+(width|height|background)\s+is\s+(.+)$/i))) {
+    const key = m[1].toLowerCase();
+    let val = m[2].trim();
+    if (key === "background") {
+      val = unquote(val);
+      if (/\.(png|jpg|jpeg|gif|webp|bmp)$/i.test(val)) return { stmt: ["window", "background_image", val, number], pos: pos + 1 };
+      resolveColor(val, number);
+    } else {
+      val = parseInt(val.replace(/pixels?|px/gi, ""), 10);
+      if (!val || val <= 0) throw new CrimError(`Line ${number}: Display ${key} must be positive.`, number);
+    }
+    return { stmt: ["window", key, val, number], pos: pos + 1 };
+  }
+
+  if ((m = text.match(/^display\s+(\w+)$/i))) return { stmt: ["show", m[1], number], pos: pos + 1 };
+
+  if ((m = text.match(/^(\w+)\s+is\s+(text|image|shape|list|grid|character|sound|particles|tile)\s*,\s*details are\s*:?$/i))) {
+    return parseElement(lines, pos, m[1], m[2].toLowerCase(), number);
+  }
+
+  if ((m = text.match(/^when\s+the\s+(display|tilemap)\s+is\s+(?:(left|right|middle)\s+)?clicked\s*,?\s*do:?$/i))) {
+    const blk = parseBlock(lines, pos + 1, { kind: "when", line: number });
+    return { stmt: ["when_click", m[1].toLowerCase(), (m[2] || "left").toLowerCase(), blk.stmts, number], pos: expectEnd(lines, blk.pos, "when", number) };
+  }
+
+  if ((m = text.match(/^when\s+(.+?)\s+is\s+(pressed|held)\s*,?\s*do:?$/i))) {
+    const blk = parseBlock(lines, pos + 1, { kind: "when", line: number });
+    return { stmt: ["when_key", parseKeyCondition(m[1], m[2].toLowerCase()), m[2].toLowerCase(), blk.stmts, number], pos: expectEnd(lines, blk.pos, "when", number) };
+  }
+
+  if ((m = text.match(/^when\s+(\w+)\s+touches\s+(\w+)\s*,?\s*do:?$/i))) {
+    const blk = parseBlock(lines, pos + 1, { kind: "when", line: number });
+    return { stmt: ["when_touch", m[1], m[2], blk.stmts, number], pos: expectEnd(lines, blk.pos, "when", number) };
+  }
+
+  if ((m = text.match(/^set\s+(\w+)\s+of\s+((?:that\s+)?\w+)\s+to\s+(.+)$/i))) {
+    const prop = m[1].toLowerCase(), target = parseTarget(m[2], number), valRaw = m[3].trim();
+    if (["x", "y"].includes(prop)) return { stmt: ["set_pos", target, prop, parseOperand(valRaw, number), number], pos: pos + 1 };
+    if (prop === "color") { const c = unquote(valRaw); resolveColor(c, number); return { stmt: ["set_color", target, c, number], pos: pos + 1 }; }
+    if (prop === "shape") return { stmt: ["set_shape", target, parseShape(unquote(valRaw), number), number], pos: pos + 1 };
+    if (prop === "rotation") return { stmt: ["set_rotation", target, parseOperand(valRaw.replace(/degrees?/i, ""), number), number], pos: pos + 1 };
+    if (["width", "height"].includes(prop)) return { stmt: ["set_size", target, prop, parseOperand(valRaw.replace(/pixels?|px/gi, ""), number), number], pos: pos + 1 };
+    if (prop === "opacity") return { stmt: ["set_opacity", target, parseOperand(valRaw.replace("%", ""), number), number], pos: pos + 1 };
+    throw new CrimError(`Line ${number}: Cannot set '${prop}'.`, number);
+  }
+
+  if ((m = text.match(/^(move|slide)\s+((?:that\s+)?\w+)\s+(.+?)\s+(in|over)\s+(.+?)\s*seconds?(?:(?:\s*,\s*|\s+with\s+)(?:with\s+)?([A-Za-z][A-Za-z ]*?))?$/i))) {
+    const verb = m[1].toLowerCase(), target = parseTarget(m[2], number), what = m[3].trim();
+    const durNode = parseOperand(m[5], number), style = (m[6] || "linear").trim().toLowerCase();
+    if (!EASINGS[style]) throw new CrimError(`Line ${number}: Unknown easing '${style}'.`, number);
+    const changes = [];
+    if (verb === "move") {
+      for (const part of what.split(/\s+and\s+/i)) {
+        const pm = part.trim().match(/^(left|right|up|down)\s+(.+?)(?:\s+pixels?)?$/i);
+        if (!pm) throw new CrimError(`Line ${number}: Invalid move tween.`, number);
+        const dir = pm[1].toLowerCase();
+        changes.push([dir === "left" || dir === "right" ? "dx" : "dy", "by", parseOperand(pm[2], number), dir]);
+      }
+    } else {
+      for (const part of what.replace(/^to\s+/i, "").split(/\s+and\s+/i)) {
+        const pm = part.trim().match(/^(x|y|opacity|rotation)\s+(.+?)(?:\s*(?:pixels?|px|degrees?|%))?$/i);
+        if (!pm) throw new CrimError(`Line ${number}: Invalid slide tween.`, number);
+        const name = pm[1].toLowerCase();
+        changes.push([name === "x" ? "dx" : name === "y" ? "dy" : name, "to", parseOperand(pm[2], number), name]);
+      }
+    }
+    return { stmt: ["tween", target, changes, durNode, style, number], pos: pos + 1 };
+  }
+
+  if ((m = text.match(/^move\s+((?:that\s+)?\w+)\s+(left|right|up|down)\s+(.+?)(?:\s+pixels?)?$/i))) {
+    return { stmt: ["move", parseTarget(m[1], number), m[2].toLowerCase(), parseOperand(m[3], number), number], pos: pos + 1 };
+  }
+
+  if ((m = text.match(/^change\s+(?:(\w+)\s+of\s+)?(\w+)(?:\[(.+?)\])?\s+by\s+(.+)$/i))) {
+    return { stmt: ["change", m[2], m[1] || null, m[3] ? parseOperand(m[3], number) : null, parseOperand(m[4], number), number], pos: pos + 1 };
+  }
+
+  if ((m = text.match(/^play\s+(?:sound\s+)?(.+)$/i))) return { stmt: ["play", unquote(m[1]), number], pos: pos + 1 };
+  if ((m = text.match(/^make\s+(.+?)\s+cop(?:y|ies) of\s+(\w+)$/i))) return { stmt: ["make", parseOperand(m[1], number), m[2], number], pos: pos + 1 };
+  if ((m = text.match(/^patrol\s+(\w+)\s+from\s+(left|right|up|down)\s+to\s+(left|right|up|down)$/i))) return { stmt: ["patrol", m[1], m[2].toLowerCase(), m[3].toLowerCase(), number], pos: pos + 1 };
+  if ((m = text.match(/^orbit\s+(\w+)\s+around\s+(\w+)$/i))) return { stmt: ["orbit", m[1], m[2], number], pos: pos + 1 };
+  if ((m = text.match(/^stalk\s+(\w+)\s+towards\s+(\w+)(?:\s+with\s+(\d+(?:\.\d+)?)\s+delay)?$/i))) return { stmt: ["stalk", m[1], m[2], m[3] ? parseFloat(m[3]) : 0, number], pos: pos + 1 };
+  if ((m = text.match(/^burst\s+(\w+)\s+at\s+(.+)$/i))) return { stmt: ["burst", m[1], parseAnchor(m[2], number), number], pos: pos + 1 };
+  if ((m = text.match(/^stream\s+(\w+)\s+from\s+(.+)$/i))) return { stmt: ["stream", m[1], parseAnchor(m[2], number), number], pos: pos + 1 };
+  if ((m = text.match(/^stop\s+(\w+)$/i))) return { stmt: ["stop_particles", m[1], number], pos: pos + 1 };
+
+  if ((m = text.match(/^plug\s+tilemap\s+to\s+display(?:\s*(?:,|with)\s*tile\s+size(?:\s+is)?\s+(.+?)(?:\s+pixels?)?)?$/i))) {
+    return { stmt: ["plug", m[1] ? parseOperand(m[1], number) : null, number], pos: pos + 1 };
+  }
+  if ((m = text.match(/^place\s+(\w+)\s+from\s+(?:tile\s*)?\(\s*([^,()]+?)\s*,\s*([^()]+?)\s*\)\s+to\s+(?:tile\s*)?\(\s*([^,()]+?)\s*,\s*([^()]+?)\s*\)$/i))) {
+    return { stmt: ["place_tile", m[1], parseOperand(m[2], number), parseOperand(m[3], number), parseOperand(m[4], number), parseOperand(m[5], number), number], pos: pos + 1 };
+  }
+  if ((m = text.match(/^place\s+(\w+)\s+at\s+(?:tile\s*)?\(\s*([^,()]+?)\s*,\s*([^()]+?)\s*\)$/i))) {
+    const x = parseOperand(m[2], number), y = parseOperand(m[3], number);
+    return { stmt: ["place_tile", m[1], x, y, x, y, number], pos: pos + 1 };
+  }
+  if ((m = text.match(/^remove\s+tile\s+at\s+(?:tile\s*)?\(\s*([^,()]+?)\s*,\s*([^()]+?)\s*\)$/i))) {
+    return { stmt: ["remove_tile", parseOperand(m[1], number), parseOperand(m[2], number), number], pos: pos + 1 };
+  }
+
+  if ((m = text.match(/^(every|after)\s+(.+?)\s*seconds?\s*,?\s*do:?$/i))) {
+    const kind = m[1].toLowerCase();
+    const blk = parseBlock(lines, pos + 1, { kind, line: number });
+    return { stmt: ["timer", kind, parseOperand(m[2], number), blk.stmts, number], pos: expectEnd(lines, blk.pos, kind, number) };
+  }
+
+  if ((m = text.match(/^repeat\s+(.+?)(?:\s+times)?\s*:?$/i))) {
+    const blk = parseBlock(lines, pos + 1, { kind: "repeat", line: number });
+    return { stmt: ["repeat", parseOperand(m[1], number), blk.stmts, number], pos: expectEnd(lines, blk.pos, "repeat", number) };
+  }
+  if (/^forever\s*:?$/i.test(text)) {
+    const blk = parseBlock(lines, pos + 1, { kind: "forever", line: number });
+    return { stmt: ["forever", blk.stmts, number], pos: expectEnd(lines, blk.pos, "forever", number) };
+  }
+  if ((m = text.match(/^(as long as|until)\s+(.+?)\s*,?\s*do:?$/i))) {
+    let cond = parseCondition(m[2], number);
+    if (m[1].toLowerCase() === "until") cond = ["not", cond];
+    const blk = parseBlock(lines, pos + 1, { kind: "while", line: number });
+    return { stmt: ["while", cond, blk.stmts, number], pos: expectEnd(lines, blk.pos, "while", number) };
+  }
+  if (/^always\s*,?\s*do:?$/i.test(text)) {
+    const blk = parseBlock(lines, pos + 1, { kind: "always", line: number });
+    return { stmt: ["always", blk.stmts, number], pos: expectEnd(lines, blk.pos, "always", number) };
+  }
+
+  if ((m = text.match(/^(?:definition of|instruction to)\s+(\w+)(?:\s+using\s+(.+?))?\s*(?:is)?\s*:?$/i))) {
+    const params = m[2] ? m[2].split(/\s*,\s*|\s+and\s+/).map(s => s.trim()).filter(Boolean) : [];
+    const blk = parseBlock(lines, pos + 1, { kind: "instruction", line: number });
+    return { stmt: ["define", m[1], blk.stmts, params], pos: expectEnd(lines, blk.pos, "instruction", number) };
+  }
+  if ((m = text.match(/^(?:run|perform)\s+(\w+)(?:\s+using\s+(.+))?$/i))) {
+    return { stmt: ["run", m[1], number, m[2] ? splitArgs(m[2]).map(a => parseOperand(a, number)) : []], pos: pos + 1 };
+  }
+  if ((m = text.match(/^give back\s+(.+)$/i))) return { stmt: ["return", parseOperand(m[1], number), number], pos: pos + 1 };
+  if (/^stop$/i.test(text)) return { stmt: ["stop", number], pos: pos + 1 };
+
+  if ((m = text.match(/^set\s+(\w+)(?:\[(.+?)\])?\s+to\s+(.+)$/i))) {
+    const idx = m[2] ? parseOperand(m[2], number) : null;
+    return { stmt: ["set", m[1], idx, splitJoined(m[3], number).map(p => parseOperand(p, number)), number], pos: pos + 1 };
+  }
+
+  if ((m = text.match(/^add\s+(.+?)\s+to\s+(\w+)$/i))) return { stmt: ["list_add", m[2], splitJoined(m[1], number).map(p => parseOperand(p, number)), number], pos: pos + 1 };
+  if ((m = text.match(/^remove item\s+(.+?)\s+from\s+(\w+)$/i))) return { stmt: ["list_remove_index", m[2], parseOperand(m[1], number), number], pos: pos + 1 };
+  if ((m = text.match(/^empty\s+(\w+)$/i))) return { stmt: ["list_empty", m[1], number], pos: pos + 1 };
+  if ((m = text.match(/^sort\s+(\w+)$/i))) return { stmt: ["list_sort", m[1], number], pos: pos + 1 };
+
+  if ((m = text.match(/^put\s+(.+?)\s+into\s+a\s+group\s+called\s+"(\w+)"$/i))) return { stmt: ["group_put", m[1].split(",").map(s => s.trim()), m[2], number], pos: pos + 1 };
+  if ((m = text.match(/^hide\s+(\w+)$/i))) return { stmt: ["group_hide", m[1], number], pos: pos + 1 };
+  if ((m = text.match(/^show\s+(\w+)$/i))) return { stmt: ["group_show", m[1], number], pos: pos + 1 };
+
+  if ((m = text.match(/^say\s+(.+?)(?:\s+and wait for input(?:\s*,\s*store input in\s+(\w+))?)?$/i))) {
+    let expr = m[1];
+    const wait = /and wait for input/i.test(text);
+    const storeVar = m[2] || "input";
+    let color = null;
+    const cm = expr.match(/^(.+?)\s+in\s+("#[0-9A-Fa-f]{6}"|[A-Za-z]+)$/);
+    if (cm && (expr.slice(0, cm[1].length).split('"').length - 1) % 2 === 0) {
+      const cWord = unquote(cm[2]);
+      if (cm[2].startsWith('"') || COLORS[cWord.toLowerCase()]) {
+        color = resolveColor(cWord, number);
+        expr = cm[1];
+      }
+    }
+    return { stmt: ["say", splitJoined(expr, number).map(p => parseOperand(p, number)), wait, storeVar, number, color], pos: pos + 1 };
+  }
+
+  if ((m = text.match(/^([A-Za-z_]\w*)\s+with\s+(.+)$/i)) && !STATEMENT_STARTERS.has(m[1].toLowerCase())) {
+    return { stmt: ["run", m[1], number, splitArgs(m[2]).map(a => parseOperand(a, number))], pos: pos + 1 };
+  }
+  if (/^[A-Za-z_]\w*$/.test(text) && !STATEMENT_STARTERS.has(text.toLowerCase())) {
+    return { stmt: ["run", text, number, []], pos: pos + 1 };
+  }
+
+  throw new CrimError(`Line ${number}: I don't understand '${text}'.`, number);
+}
+
+class CrimRuntime {
+  constructor(canvas, assets, callbacks) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext("2d");
+    this.assets = assets;
+    this.callbacks = callbacks;
+
+    this.env = {};
+    this.defs = {};
+    this.modules = new Set();
+    this.elements = {};
+    this.scene = [];
+    this.groups = {};
+    this.handlers = [];
+    this.alwaysBlocks = [];
+    this.timers = [];
+    this.tweens = [];
+    this.particles = [];
+    this.emitters = {};
+    this.patrolStates = {};
+    this.orbitAngles = {};
+    this.orbitTargets = {};
+    this.stalks = [];
+    this.stalkPaths = {};
+    this.tilemap = null;
+    this.copyCounts = {};
+    this.bindings = {};
+    this.rects = {};
+    this.touching = new Set();
+
+    this.window = { width: 760, height: 320, background: "#111116", background_image: null };
+    this.displayOpen = false;
+    this.running = false;
+    this.rafId = null;
+    this.lastTime = 0;
+
+    this.mouse = { x: 0, y: 0 };
+    this.keysDown = new Set();
+    this.keysPressed = new Set();
+    this.imageCache = {};
+    this.depth = 0;
+    this.aborted = false;
+  }
+
+  needModule(mod, line) {
+    if (!this.modules.has(mod)) throw new CrimError(`Line ${line}: Needs 'use ${mod}' at the top.`, line);
+  }
+
+  resolveAssetImage(filename) {
+    if (!filename) return null;
+    if (this.imageCache[filename]) return this.imageCache[filename];
+    const asset = this.assets[filename];
+    if (!asset || asset.type !== "image") return null;
+    const img = new Image();
+    img.src = asset.dataUrl;
+    this.imageCache[filename] = img;
+    return img;
+  }
+
+  playSoundAsset(filename, opts = {}) {
+    const asset = this.assets[filename];
+    if (!asset || asset.type !== "audio") {
+      this.callbacks.onSay(`[Audio: "${filename}" not uploaded yet]`, null);
+      return;
+    }
+    try {
+      const audio = new Audio(asset.dataUrl);
+      audio.volume = opts.volume !== undefined ? Math.max(0, Math.min(1, opts.volume)) : 1.0;
+      if (opts.speed) audio.playbackRate = opts.speed;
+      audio.play().catch(() => {});
+    } catch {}
+  }
+
+  evalValue(node, line) {
+    if (!node) return 0;
+    const kind = node[0];
+    if (kind === "num" || kind === "text") return node[1];
+    if (kind === "var") {
+      const name = node[1];
+      if (name in this.env) return this.env[name];
+      if (name in this.defs) return this.callFunction(name, [], line);
+      throw new CrimError(`Line ${line}: '${name}' is not defined yet.`, line);
+    }
+    if (kind === "prop") {
+      const [_, objName, propName] = node;
+      const obj = this.env[objName];
+      if (obj && typeof obj === "object" && !Array.isArray(obj)) return obj[propName] ?? 0;
+      if (objName in this.bindings || objName in this.elements) {
+        const item = this.bindings[objName] || this.scene.find(i => i.base === objName);
+        const spec = item ? item.spec : this.elements[objName];
+        const box = this.computeItemBox(item || { name: objName, spec });
+        if (propName === "x" || propName === "left") return box.x;
+        if (propName === "y" || propName === "top") return box.y;
+        if (propName === "width") return box.w;
+        if (propName === "height") return box.h;
+        if (propName === "right") return box.x + box.w;
+        if (propName === "bottom") return box.y + box.h;
+        if (propName === "opacity") return Math.round((spec.opacity ?? 1) * 100);
+      }
+      throw new CrimError(`Line ${line}: Unknown property '${propName}' of '${objName}'.`, line);
+    }
+    if (kind === "window_size") return this.window[node[1]];
+    if (kind === "mouse") {
+      if (node[1] === "x") return Math.round(this.mouse.x);
+      if (node[1] === "y") return Math.round(this.mouse.y);
+      if (!this.tilemap) throw new CrimError(`Line ${line}: Tilemap not plugged in.`, line);
+      return Math.floor((node[1] === "tile_x" ? this.mouse.x : this.mouse.y) / this.tilemap.cell);
+    }
+    if (kind === "tile_at") {
+      if (!this.tilemap) return "";
+      const found = this.tilemap.cells.get(`${Math.round(this.evalNumber(node[1], line))},${Math.round(this.evalNumber(node[2], line))}`);
+      return found ? found.base : "";
+    }
+    if (kind === "random_expr") {
+      const lo = Math.ceil(this.evalNumber(node[1], line));
+      const hi = Math.floor(this.evalNumber(node[2], line));
+      return Math.floor(Math.random() * (hi - lo + 1)) + lo;
+    }
+    if (kind === "agg") {
+      let vals = node[2].map(a => this.evalValue(a, line));
+      if (vals.length === 1 && Array.isArray(vals[0])) vals = vals[0];
+      const nums = vals.map(v => toNumber(v) ?? 0);
+      if (!nums.length) return 0;
+      if (node[1] === "sum") return nums.reduce((a, b) => a + b, 0);
+      if (node[1] === "average") return nums.reduce((a, b) => a + b, 0) / nums.length;
+      if (node[1] === "smallest") return Math.min(...nums);
+      if (node[1] === "largest") return Math.max(...nums);
+    }
+    if (kind === "index") {
+      const lst = this.env[node[1]];
+      if (!Array.isArray(lst)) throw new CrimError(`Line ${line}: '${node[1]}' is not a list.`, line);
+      return lst[Math.floor(this.evalNumber(node[2], line))];
+    }
+    if (kind === "call") return this.callFunction(node[1], node[2].map(a => this.evalValue(a, line)), line);
+    if (kind === "textfn") {
+      const v = this.evalValue(node[2], line);
+      if (node[1] === "length") return Array.isArray(v) ? v.length : showVal(v).length;
+      const s = showVal(v);
+      if (node[1] === "uppercase") return s.toUpperCase();
+      if (node[1] === "lowercase") return s.toLowerCase();
+      return s.trim();
+    }
+    if (kind === "split") {
+      const s = showVal(this.evalValue(node[1], line)), sep = showVal(this.evalValue(node[2], line));
+      return sep === "" ? [...s] : s.split(sep);
+    }
+    if (kind === "join") return this.env[node[1]].map(showVal).join(showVal(this.evalValue(node[2], line)));
+    if (kind === "random_item") {
+      const lst = this.env[node[1]];
+      return lst[Math.floor(Math.random() * lst.length)];
+    }
+    if (kind === "neg") return -this.evalNumber(node[1], line);
+    if (kind === "func") {
+      const n = this.evalNumber(node[2], line), fn = node[1];
+      if (fn === "abs") return Math.abs(n);
+      if (fn === "round") return Math.round(n);
+      if (fn === "floor") return Math.floor(n);
+      if (fn === "ceil") return Math.ceil(n);
+      if (fn === "sqrt") return Math.sqrt(n);
+      if (fn === "3rt") return Math.cbrt(n);
+      const rad = (n * Math.PI) / 180;
+      if (fn === "sin") return Math.sin(rad);
+      if (fn === "cos") return Math.cos(rad);
+      if (fn === "tan") return Math.tan(rad);
+    }
+    if (kind === "bin") {
+      const [_, op, l, r] = node;
+      const a = this.evalNumber(l, line), b = this.evalNumber(r, line);
+      if (op === "+") return a + b;
+      if (op === "-") return a - b;
+      if (op === "*") return a * b;
+      if (op === "/") { if (b === 0) throw new CrimError(`Line ${line}: Cannot divide by zero.`, line); return a / b; }
+      if (op === "%" || op === "mod") return a % b;
+      if (op === "^") return Math.pow(a, b);
+    }
+    return 0;
+  }
+
+  evalNumber(node, line) {
+    const v = this.evalValue(node, line);
+    const n = toNumber(v);
+    if (n === null) throw new CrimError(`Line ${line}: '${showVal(v)}' is not a number.`, line);
+    return n;
+  }
+
+  evalJoined(parts, line) {
+    const vals = parts.map(p => this.evalValue(p, line));
+    return vals.length === 1 ? vals[0] : vals.map(showVal).join("");
+  }
+
+  holds(cond, line) {
+    const kind = cond[0];
+    if (kind === "not") return !this.holds(cond[1], line);
+    if (kind === "and") return cond[1].every(c => this.holds(c, line));
+    if (kind === "or") return cond[1].some(c => this.holds(c, line));
+    if (kind === "touching") {
+      const res = this.checkTouching(cond[1], cond[2], line);
+      return cond[3] ? !res : res;
+    }
+    if (kind === "compare") {
+      const [_, op, left, right] = cond;
+      const a = this.evalValue(left, line), b = this.evalValue(right, line);
+      const x = toNumber(a), y = toNumber(b);
+      if (x !== null && y !== null) {
+        if (op === "<") return x < y;
+        if (op === ">") return x > y;
+        if (op === "=" || op === "is") return x === y;
+        if (op === "<=" || op === "<or=") return x <= y;
+        if (op === ">=" || op === ">or=") return x >= y;
+        if (op === "!=" || op === "isnot") return x !== y;
+      }
+      const sa = showVal(a).trim().toLowerCase(), sb = showVal(b).trim().toLowerCase();
+      if (op === "=" || op === "is") return sa === sb;
+      if (op === "!=" || op === "isnot") return sa !== sb;
+      return false;
+    }
+    if (["contains", "not contains", "starts", "ends"].includes(kind)) {
+      const l = this.evalValue(cond[1], line), r = showVal(this.evalValue(cond[2], line)).toLowerCase();
+      let found = false;
+      if (Array.isArray(l)) {
+        const items = l.map(x => showVal(x).toLowerCase());
+        found = kind === "starts" ? items[0] === r : kind === "ends" ? items[items.length - 1] === r : items.includes(r);
+      } else {
+        const hay = showVal(l).toLowerCase();
+        found = kind === "starts" ? hay.startsWith(r) : kind === "ends" ? hay.endsWith(r) : hay.includes(r);
+      }
+      return kind === "not contains" ? !found : found;
+    }
+    const v = this.evalValue(cond[1], line);
+    if (kind === "number") return toNumber(v) !== null;
+    if (kind === "not number") return toNumber(v) === null;
+    if (kind === "letters") return typeof v === "string" && /[a-zA-Z]/.test(v);
+    if (kind === "color" || kind === "not color") {
+      try { resolveColor(showVal(v), line); return kind === "color"; } catch { return kind === "not color"; }
+    }
+    return false;
+  }
+
+  targetSpecs(target, line) {
+    const [kind, name] = target;
+    if (kind === "that") return [this.bindings[name].spec];
+    if (!this.elements[name]) throw new CrimError(`Line ${line}: Unknown thing '${name}'.`, line);
+    const items = this.scene.filter(i => i.base === name);
+    return items.length ? items.map(i => i.spec) : [this.elements[name]];
+  }
+
+  targetItems(target, line) {
+    const [kind, name] = target;
+    if (kind === "that") return [this.bindings[name]];
+    if (!this.elements[name]) throw new CrimError(`Line ${line}: Unknown thing '${name}'.`, line);
+    return this.scene.filter(i => i.base === name);
+  }
+
+  checkTouching(a, b, line) {
+    for (const x of this.targetItems(a, line)) {
+      for (const y of this.targetItems(b, line)) {
+        if (x === y) continue;
+        const rx = this.rects[x.name] || this.computeItemBox(x);
+        const ry = this.rects[y.name] || this.computeItemBox(y);
+        if (rx.x <= ry.x + ry.w && ry.x <= rx.x + rx.w && rx.y <= ry.y + ry.h && ry.y <= rx.y + ry.h) return true;
+      }
+    }
+    return false;
+  }
+
+  computeItemBox(item) {
+    const spec = item.spec;
+    let w = 0, h = 0;
+    if (spec.kind === "text") {
+      this.ctx.font = `600 ${spec.size}px ${spec.font}`;
+      w = Math.ceil(this.ctx.measureText(this.getTextString(spec)).width);
+      h = spec.size;
+    } else if (spec.kind === "image") {
+      const img = this.resolveAssetImage(spec.picture);
+      const natW = img && img.complete && img.naturalWidth ? img.naturalWidth : 48;
+      const natH = img && img.complete && img.naturalHeight ? img.naturalHeight : 48;
+      w = spec.width || (spec.height ? Math.round(natW * spec.height / natH) : natW);
+      h = spec.height || (spec.width ? Math.round(natH * spec.width / natW) : natH);
+    } else {
+      w = spec.width || 60;
+      h = spec.height || 60;
+    }
+    const [fx, fy] = POSITIONS[spec.position] || POSITIONS["center"];
+    const bx = Math.round(fx * (this.window.width - w));
+    const by = Math.round(fy * (this.window.height - h));
+    if (spec.free) return { x: bx + spec.dx, y: by + spec.dy, w, h, bx, by };
+    const x = Math.min(Math.max(bx + spec.dx, 0), Math.max(0, this.window.width - w));
+    const y = Math.min(Math.max(by + spec.dy, 0), Math.max(0, this.window.height - h));
+    return { x, y, w, h, bx, by };
+  }
+
+  getTextString(spec) {
+    if (!spec.text) return "";
+    if (spec.text[0] === "time") {
+      const now = new Date();
+      let h = now.getHours();
+      const ampm = h >= 12 ? " PM" : " AM";
+      h = h % 12 || 12;
+      let out = `${h}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
+      if (spec.text[1].milliseconds) out += `.${String(now.getMilliseconds()).padStart(3, "0")}`;
+      return out + ampm;
+    }
+    return showVal(this.evalJoined(spec.text[1], 1));
+  }
+
+  callFunction(name, args, line) {
+    if (!this.defs[name]) throw new CrimError(`Line ${line}: Unknown instruction '${name}'.`, line);
+    const [body, params] = this.defs[name];
+    if (args.length !== params.length) throw new CrimError(`Line ${line}: '${name}' expects ${params.length} inputs.`, line);
+    const saved = {};
+    params.forEach((p, i) => { if (p in this.env) saved[p] = this.env[p]; this.env[p] = args[i]; });
+    let ret = null;
+    try { this.runBlockSync(body); }
+    catch (e) { if (e instanceof ReturnSignal) ret = e.value; else throw e; }
+    finally { params.forEach(p => { if (p in saved) this.env[p] = saved[p]; else delete this.env[p]; }); }
+    return ret;
+  }
+
+  async runBlock(stmts) {
+    for (const stmt of stmts) {
+      if (this.aborted) return;
+      await this.runStmt(stmt);
+    }
+  }
+
+  runBlockSync(stmts) {
+    for (const stmt of stmts) {
+      if (this.aborted) return;
+      this.runStmtSync(stmt);
+    }
+  }
+
+  async runStmt(stmt) {
+    const kind = stmt[0];
+    if (kind === "say") {
+      const [_, parts, wait, storeVar, line, color] = stmt;
+      const msg = showVal(this.evalJoined(parts, line));
+      if (wait) {
+        const ans = await this.callbacks.onAsk(msg);
+        if (this.aborted) return;
+        const n = toNumber(ans);
+        this.env[storeVar] = n !== null ? n : ans;
+      } else {
+        this.callbacks.onSay(msg, color);
+      }
+      return;
+    }
+    if (kind === "wait") {
+      await new Promise(r => setTimeout(r, Math.max(0, this.evalNumber(stmt[1], stmt[2]) * 1000)));
+      return;
+    }
+    if (kind === "chain") {
+      for (const [cond, body, line] of stmt[1]) {
+        if (cond === null || this.holds(cond, line)) { await this.runBlock(body); return; }
+      }
+      return;
+    }
+    if (kind === "repeat") {
+      const count = Math.floor(this.evalNumber(stmt[1], stmt[3]));
+      try { for (let i = 0; i < count; i++) { if (this.aborted) return; await this.runBlock(stmt[2]); } }
+      catch (e) { if (!(e instanceof StopSignal)) throw e; }
+      return;
+    }
+    if (kind === "while") {
+      let guard = 0;
       try {
-        execBlock(lines);
-        if (displayOpen && scene.length) {
-          ctx.fillStyle = '#14101c';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          for (const name of scene) {
-            const s = elements[name];
-            const bx = s.position === 'top left' ? 0 : (canvas.width - s.width) / 2;
-            const by = s.position === 'top left' ? 0 : (canvas.height - s.height) / 2;
-            const x = bx + s.dx, y = by + s.dy;
-            ctx.fillStyle = COLOR_MAP[s.color.toLowerCase()] || s.color;
-            if (s.shape === 'circle') {
-              ctx.beginPath();
-              ctx.ellipse(x + s.width / 2, y + s.height / 2, s.width / 2, s.height / 2, 0, 0, Math.PI * 2);
-              ctx.fill();
-            } else {
-              ctx.fillRect(x, y, s.width, s.height);
+        while (this.holds(stmt[1], stmt[3])) {
+          if (this.aborted) return;
+          if (++guard > 50000) throw new CrimError(`Line ${stmt[3]}: Loop limit reached.`, stmt[3]);
+          await this.runBlock(stmt[2]);
+        }
+      } catch (e) { if (!(e instanceof StopSignal)) throw e; }
+      return;
+    }
+    if (kind === "for_each") {
+      const lst = this.env[stmt[2]];
+      for (const item of lst) { this.env[stmt[1]] = item; await this.runBlock(stmt[3]); }
+      return;
+    }
+    this.runStmtSync(stmt);
+  }
+
+  runStmtSync(stmt) {
+    const kind = stmt[0];
+    if (kind === "say") {
+      this.callbacks.onSay(showVal(this.evalJoined(stmt[1], stmt[4])), stmt[5]);
+    } else if (kind === "set") {
+      const [_, name, idx, parts, line] = stmt;
+      const val = this.evalJoined(parts, line);
+      if (idx !== null) this.env[name][Math.floor(this.evalNumber(idx, line))] = val;
+      else this.env[name] = val;
+    } else if (kind === "change") {
+      const [_, name, prop, idx, amtNode, line] = stmt;
+      const delta = this.evalNumber(amtNode, line);
+      if (prop) this.env[name][prop] = (toNumber(this.env[name][prop]) || 0) + delta;
+      else if (idx !== null) this.env[name][Math.floor(this.evalNumber(idx, line))] += delta;
+      else this.env[name] = (toNumber(this.env[name]) || 0) + delta;
+    } else if (kind === "chain") {
+      for (const [cond, body, line] of stmt[1]) {
+        if (cond === null || this.holds(cond, line)) { this.runBlockSync(body); return; }
+      }
+    } else if (kind === "repeat") {
+      const count = Math.floor(this.evalNumber(stmt[1], stmt[3]));
+      try { for (let i = 0; i < count; i++) this.runBlockSync(stmt[2]); }
+      catch (e) { if (!(e instanceof StopSignal)) throw e; }
+    } else if (kind === "while") {
+      let guard = 0;
+      try {
+        while (this.holds(stmt[1], stmt[3])) {
+          if (++guard > 50000) throw new CrimError(`Line ${stmt[3]}: Loop limit reached.`, stmt[3]);
+          this.runBlockSync(stmt[2]);
+        }
+      } catch (e) { if (!(e instanceof StopSignal)) throw e; }
+    } else if (kind === "uses") {
+      this.modules.add(stmt[1]);
+    } else if (kind === "open_display") {
+      this.needModule("display", stmt[1]);
+      this.displayOpen = true;
+      this.resizeCanvas();
+    } else if (kind === "window") {
+      this.needModule("display", stmt[3]);
+      this.window[stmt[1]] = stmt[2];
+      if (stmt[1] === "background") this.window.background_image = null;
+      this.resizeCanvas();
+    } else if (kind === "element") {
+      const [_, name, spec, elemKind] = stmt;
+      if (elemKind === "list") this.env[name] = [...spec.items];
+      else if (elemKind === "character") this.env[name] = { ...spec };
+      else this.elements[name] = spec;
+    } else if (kind === "show") {
+      const [_, name, line] = stmt;
+      this.needModule("display", line);
+      if (!this.displayOpen) throw new CrimError(`Line ${line}: Put 'open display' before 'display ${name}'.`, line);
+      if (this.elements[name]) this.displayElement(name, line);
+      else if (this.groups[name]) for (const m of this.groups[name]) this.displayElement(m, line);
+      else throw new CrimError(`Line ${line}: Unknown thing '${name}'.`, line);
+    } else if (kind === "move") {
+      const [_, target, dir, amtNode, line] = stmt;
+      const amt = this.evalNumber(amtNode, line);
+      for (const spec of this.targetSpecs(target, line)) {
+        if (dir === "right") spec.dx += amt;
+        else if (dir === "left") spec.dx -= amt;
+        else if (dir === "down") spec.dy += amt;
+        else if (dir === "up") spec.dy -= amt;
+      }
+    } else if (kind === "set_pos") {
+      const [_, target, axis, valNode, line] = stmt;
+      const val = this.evalNumber(valNode, line);
+      for (const item of this.targetItems(target, line)) {
+        const box = this.computeItemBox(item);
+        if (axis === "x") item.spec.dx = val - box.bx;
+        else item.spec.dy = val - box.by;
+      }
+    } else if (kind === "set_size") {
+      const val = Math.round(this.evalNumber(stmt[3], stmt[4]));
+      for (const spec of this.targetSpecs(stmt[1], stmt[4])) spec[stmt[2]] = Math.max(0, val);
+    } else if (kind === "set_color") {
+      for (const spec of this.targetSpecs(stmt[1], stmt[3])) spec.color = stmt[2];
+    } else if (kind === "set_shape") {
+      for (const spec of this.targetSpecs(stmt[1], stmt[3])) spec.shape = stmt[2];
+    } else if (kind === "set_opacity") {
+      const pct = this.evalNumber(stmt[2], stmt[3]);
+      for (const spec of this.targetSpecs(stmt[1], stmt[3])) spec.opacity = Math.max(0, Math.min(100, pct)) / 100;
+    } else if (kind === "set_rotation") {
+      const deg = this.evalNumber(stmt[2], stmt[3]) % 360;
+      for (const spec of this.targetSpecs(stmt[1], stmt[3])) spec.rotation = deg;
+    } else if (kind === "tween") {
+      const [_, target, changes, durNode, style, line] = stmt;
+      const dur = this.evalNumber(durNode, line), ease = EASINGS[style];
+      for (const item of this.targetItems(target, line)) {
+        const box = this.computeItemBox(item);
+        for (const [key, mode, node, shown] of changes) {
+          const val = this.evalNumber(node, line);
+          let start = item.spec[key] || 0, end = val;
+          if (key === "dx" || key === "dy") {
+            end = mode === "by" ? start + ((shown === "right" || shown === "down") ? val : -val) : val - (key === "dx" ? box.bx : box.by);
+          } else if (key === "opacity") end = val / 100;
+          this.tweens = this.tweens.filter(t => !(t.spec === item.spec && t.key === key));
+          this.tweens.push({ spec: item.spec, key, start, end, time: 0, duration: dur, ease });
+        }
+      }
+    } else if (kind === "make") {
+      const count = Math.floor(this.evalNumber(stmt[1], stmt[3])), name = stmt[2];
+      for (let i = 0; i < count; i++) {
+        this.copyCounts[name] = (this.copyCounts[name] || 0) + 1;
+        this.scene.push({ name: `${name}#${this.copyCounts[name]}`, base: name, spec: JSON.parse(JSON.stringify(this.elements[name])) });
+      }
+    } else if (kind === "play") {
+      this.needModule("sound", stmt[2]);
+      const file = stmt[1];
+      if (this.elements[file] && this.elements[file].kind === "sound") this.playSoundAsset(this.elements[file].sound, this.elements[file]);
+      else this.playSoundAsset(file);
+    } else if (kind === "always") this.alwaysBlocks.push(stmt[1]);
+    else if (kind === "when_key") this.handlers.push({ type: "key", cond: stmt[1], mode: stmt[2], body: stmt[3], line: stmt[4] });
+    else if (kind === "when_touch") this.handlers.push({ type: "touch", a: stmt[1], b: stmt[2], body: stmt[3], line: stmt[4] });
+    else if (kind === "when_click") this.handlers.push({ type: "click", target: stmt[1], button: stmt[2], body: stmt[3], line: stmt[4] });
+    else if (kind === "timer") this.timers.push({ kind: stmt[1], node: stmt[2], body: stmt[3], line: stmt[4], elapsed: 0, done: false });
+    else if (kind === "define") this.defs[stmt[1]] = [stmt[2], stmt[3]];
+    else if (kind === "run") this.callFunction(stmt[1], stmt[3].map(a => this.evalValue(a, stmt[2])), stmt[2]);
+    else if (kind === "return") throw new ReturnSignal(this.evalValue(stmt[1], stmt[2]));
+    else if (kind === "stop") throw new StopSignal(stmt[1]);
+    else if (kind === "patrol") this.patrolStates[stmt[1]] = { dir: stmt[2], dirs: [stmt[2], stmt[3]], timer: 0 };
+    else if (kind === "orbit") { this.orbitAngles[stmt[1]] = 0; this.orbitTargets[stmt[1]] = stmt[2]; }
+    else if (kind === "stalk") this.stalks.push([stmt[1], stmt[2], stmt[3]]);
+    else if (kind === "burst") {
+      const spec = this.elements[stmt[1]];
+      if (!spec || spec.kind !== "particles") throw new CrimError(`Line ${stmt[3]}: '${stmt[1]}' is not particles.`, stmt[3]);
+      const pt = this.resolveAnchorPoint(stmt[2], stmt[3]);
+      this.spawnParticles(spec, pt.x, pt.y, spec.amount);
+    } else if (kind === "stream") {
+      this.emitters[stmt[1]] = { anchor: stmt[2], line: stmt[3], carry: 0 };
+    } else if (kind === "stop_particles") delete this.emitters[stmt[1]];
+    else if (kind === "plug") {
+      this.needModule("tilemap", stmt[2]);
+      this.tilemap = { cell: stmt[1] ? this.evalNumber(stmt[1], stmt[2]) : 32, cells: new Map() };
+    } else if (kind === "place_tile") {
+      const [_, name, x1n, y1n, x2n, y2n, line] = stmt;
+      const tile = this.elements[name];
+      const x1 = Math.round(this.evalNumber(x1n, line)), x2 = Math.round(this.evalNumber(x2n, line));
+      const y1 = Math.round(this.evalNumber(y1n, line)), y2 = Math.round(this.evalNumber(y2n, line));
+      const cell = this.tilemap.cell;
+      for (let cy = Math.min(y1, y2); cy <= Math.max(y1, y2); cy++) {
+        for (let cx = Math.min(x1, x2); cx <= Math.max(x1, x2); cx++) {
+          const key = `${cx},${cy}`;
+          const old = this.tilemap.cells.get(key);
+          if (old) this.scene = this.scene.filter(i => i !== old);
+          const spec = {
+            kind: tile.texture ? "image" : "shape", picture: tile.texture, shape: ["polygon", 4],
+            color: tile.color || "white", position: "top left", opacity: 1,
+            dx: cx * cell, dy: cy * cell, width: Math.round(tile.w * cell), height: Math.round(tile.h * cell), free: true
+          };
+          this.copyCounts[name] = (this.copyCounts[name] || 0) + 1;
+          const item = { name: `${name}#${this.copyCounts[name]}`, base: name, spec };
+          this.scene.unshift(item);
+          this.tilemap.cells.set(key, item);
+        }
+      }
+    } else if (kind === "remove_tile") {
+      const key = `${Math.round(this.evalNumber(stmt[1], stmt[3]))},${Math.round(this.evalNumber(stmt[2], stmt[3]))}`;
+      const old = this.tilemap?.cells.get(key);
+      if (old) { this.scene = this.scene.filter(i => i !== old); this.tilemap.cells.delete(key); }
+    } else if (kind === "list_add") this.env[stmt[1]].push(this.evalJoined(stmt[2], stmt[3]));
+    else if (kind === "list_remove_index") this.env[stmt[1]].splice(Math.floor(this.evalNumber(stmt[2], stmt[3])), 1);
+    else if (kind === "list_empty") this.env[stmt[1]].length = 0;
+    else if (kind === "list_sort") this.env[stmt[1]].sort((a, b) => showVal(a).localeCompare(showVal(b)));
+    else if (kind === "group_put") this.groups[stmt[2]] = stmt[1];
+    else if (kind === "group_hide") { for (const m of (this.groups[stmt[1]] || [])) if (this.elements[m]) this.elements[m].opacity = 0; }
+    else if (kind === "group_show") { for (const m of (this.groups[stmt[1]] || [])) if (this.elements[m]) this.elements[m].opacity = 1; }
+  }
+
+  displayElement(name, line) {
+    const spec = this.elements[name];
+    if (!spec) throw new CrimError(`Line ${line}: Unknown element '${name}'.`, line);
+    if (spec.kind === "grid") {
+      const totalW = spec.columns * spec.width + (spec.columns - 1) * spec.gap;
+      const totalH = spec.rows * spec.height + (spec.rows - 1) * spec.gap;
+      const startX = Math.floor((this.window.width - totalW) / 2);
+      const startY = Math.floor((this.window.height - totalH) / 2);
+      for (let r = 0; r < spec.rows; r++) {
+        for (let c = 0; c < spec.columns; c++) {
+          this.scene.push({
+            name: `${name}_${r}_${c}`, base: name,
+            spec: {
+              kind: "shape", shape: spec.shape, width: spec.width, height: spec.height,
+              color: spec.color, position: "top left", opacity: spec.opacity,
+              dx: startX + c * (spec.width + spec.gap), dy: startY + r * (spec.height + spec.gap),
+              on_click: spec.on_click, rotation: spec.rotation || 0
             }
-          }
+          });
         }
-        if (!consoleEl.children.length && !displayOpen) {
-          logLine('(Program finished with no output)', null);
-        }
-      } catch (err) {
-        const div = document.createElement('div');
-        div.className = 'log-err';
-        div.textContent = err.message;
-        consoleEl.appendChild(div);
+      }
+      return;
+    }
+    if (spec.kind !== "sound" && !this.scene.some(i => i.name === name)) this.scene.push({ name, base: name, spec });
+  }
+
+  resolveAnchorPoint(anchor, line) {
+    if (anchor[0] === "xy") return { x: this.evalNumber(anchor[1], line), y: this.evalNumber(anchor[2], line) };
+    if (anchor[0] === "place") {
+      const [fx, fy] = POSITIONS[anchor[1]];
+      return { x: fx * this.window.width, y: fy * this.window.height };
+    }
+    const items = this.targetItems(anchor[1], line);
+    if (!items.length) return { x: this.window.width / 2, y: this.window.height / 2 };
+    const box = this.rects[items[0].name] || this.computeItemBox(items[0]);
+    return { x: box.x + box.w / 2, y: box.y + box.h / 2 };
+  }
+
+  spawnParticles(spec, x, y, count) {
+    for (let i = 0; i < count && this.particles.length < 3000; i++) {
+      const angle = ((spec.direction + (Math.random() - 0.5) * spec.spread) * Math.PI) / 180;
+      const spd = spec.speed[0] + Math.random() * (spec.speed[1] - spec.speed[0]);
+      const life = spec.lifetime[0] + Math.random() * (spec.lifetime[1] - spec.lifetime[0]);
+      const size = spec.size[0] + Math.random() * (spec.size[1] - spec.size[0]);
+      const color = spec.colors[Math.floor(Math.random() * spec.colors.length)];
+      this.particles.push({
+        x, y, vx: Math.sin(angle) * spd, vy: -Math.cos(angle) * spd,
+        age: 0, life, size, color, gravity: spec.gravity, fade: spec.fade, shrink: spec.shrink
+      });
+    }
+  }
+
+  resizeCanvas() {
+    if (this.canvas.width !== this.window.width || this.canvas.height !== this.window.height) {
+      this.canvas.width = this.window.width;
+      this.canvas.height = this.window.height;
+    }
+  }
+
+  keyHolds(cond) {
+    if (cond[0] === "key") return cond[2] === "pressed" ? this.keysPressed.has(cond[1]) : this.keysDown.has(cond[1]);
+    if (cond[0] === "or") return cond[1].some(c => this.keyHolds(c));
+    return cond[1].every(c => this.keyHolds(c));
+  }
+
+  stepFrame(dt) {
+    for (const h of this.handlers) if (h.type === "key" && this.keyHolds(h.cond)) this.runBlockSync(h.body);
+    this.keysPressed.clear();
+
+    for (const blk of this.alwaysBlocks) this.runBlockSync(blk);
+
+    for (const [name, st] of Object.entries(this.patrolStates)) {
+      if (++st.timer > 120) { st.timer = 0; st.dir = st.dir === st.dirs[0] ? st.dirs[1] : st.dirs[0]; }
+      for (const item of this.scene.filter(i => i.base === name)) {
+        if (st.dir === "right") item.spec.dx += 3;
+        else if (st.dir === "left") item.spec.dx -= 3;
+        else if (st.dir === "down") item.spec.dy += 3;
+        else if (st.dir === "up") item.spec.dy -= 3;
       }
     }
 
-    loadPreset('hello', document.querySelector('.preset-btn'));
-  </script>
+    for (const [aName, angle] of Object.entries(this.orbitAngles)) {
+      const nextAngle = (angle + 2) % 360;
+      this.orbitAngles[aName] = nextAngle;
+      const rad = (nextAngle * Math.PI) / 180;
+      const targetItem = this.scene.find(i => i.base === this.orbitTargets[aName]);
+      if (!targetItem) continue;
+      const rb = this.rects[targetItem.name] || this.computeItemBox(targetItem);
+      for (const item of this.scene.filter(i => i.base === aName)) {
+        const ra = this.rects[item.name] || this.computeItemBox(item);
+        item.spec.dx = Math.round(rb.x + rb.w / 2 + Math.cos(rad) * 110 - ra.w / 2 - ra.bx);
+        item.spec.dy = Math.round(rb.y + rb.h / 2 + Math.sin(rad) * 110 - ra.h / 2 - ra.by);
+      }
+    }
+
+    for (const [aName, bName, delay] of this.stalks) {
+      const bItem = this.scene.find(i => i.base === bName);
+      if (!bItem) continue;
+      const key = `${aName}|${bName}`;
+      if (!this.stalkPaths[key]) this.stalkPaths[key] = [];
+      this.stalkPaths[key].push([bItem.spec.dx, bItem.spec.dy]);
+      if (this.stalkPaths[key].length > 600) this.stalkPaths[key].shift();
+      const pt = this.stalkPaths[key][Math.max(0, this.stalkPaths[key].length - 1 - Math.max(0, Math.round(delay * 60)))];
+      if (pt) for (const item of this.scene.filter(i => i.base === aName)) { item.spec.dx = pt[0]; item.spec.dy = pt[1]; }
+    }
+
+    for (const t of this.timers) {
+      if (t.done) continue;
+      t.elapsed += dt;
+      if (t.elapsed >= this.evalNumber(t.node, t.line)) {
+        if (t.kind === "every") t.elapsed = 0; else t.done = true;
+        this.runBlockSync(t.body);
+      }
+    }
+
+    this.tweens = this.tweens.filter(tw => {
+      tw.time += dt;
+      const done = tw.time >= tw.duration;
+      tw.spec[tw.key] = tw.start + (tw.end - tw.start) * (done ? 1 : tw.ease(tw.time / tw.duration));
+      return !done;
+    });
+
+    for (const [name, em] of Object.entries(this.emitters)) {
+      const spec = this.elements[name];
+      if (!spec) continue;
+      const pt = this.resolveAnchorPoint(em.anchor, em.line);
+      em.carry += spec.rate * dt;
+      const count = Math.floor(em.carry);
+      em.carry -= count;
+      if (count > 0) this.spawnParticles(spec, pt.x, pt.y, count);
+    }
+
+    this.particles = this.particles.filter(p => {
+      p.age += dt;
+      if (p.age >= p.life) return false;
+      p.vy += p.gravity * dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      return true;
+    });
+
+    for (const item of this.scene) {
+      if (!item.spec.pos_expr) continue;
+      for (const [axis, [sign, node, line]] of Object.entries(item.spec.pos_expr)) {
+        item.spec[axis] = sign * this.evalNumber(node, line);
+      }
+    }
+
+    this.render();
+
+    const currentTouches = new Set();
+    for (let idx = 0; idx < this.handlers.length; idx++) {
+      const h = this.handlers[idx];
+      if (h.type !== "touch") continue;
+      for (const a of this.scene.filter(x => x.base === h.a)) {
+        for (const b of this.scene.filter(x => x.base === h.b)) {
+          if (a === b) continue;
+          const ra = this.rects[a.name], rb = this.rects[b.name];
+          if (ra && rb && ra.x <= rb.x + rb.w && rb.x <= ra.x + ra.w && ra.y <= rb.y + rb.h && rb.y <= ra.y + ra.h) {
+            currentTouches.add(`${idx}|${a.name}|${b.name}`);
+          }
+        }
+      }
+    }
+    for (const key of currentTouches) {
+      if (!this.touching.has(key)) {
+        const [idxStr, aName, bName] = key.split("|");
+        const h = this.handlers[parseInt(idxStr, 10)];
+        const prev = this.bindings;
+        this.bindings = { [h.a]: this.scene.find(x => x.name === aName), [h.b]: this.scene.find(x => x.name === bName) };
+        try { this.runBlockSync(h.body); } finally { this.bindings = prev; }
+      }
+    }
+    this.touching = currentTouches;
+  }
+
+  render() {
+    const ctx = this.ctx, W = this.window.width, H = this.window.height;
+    ctx.save();
+    ctx.globalAlpha = 1;
+    if (this.window.background_image) {
+      const bgImg = this.resolveAssetImage(this.window.background_image);
+      if (bgImg && bgImg.complete && bgImg.naturalWidth) ctx.drawImage(bgImg, 0, 0, W, H);
+      else { ctx.fillStyle = "#111116"; ctx.fillRect(0, 0, W, H); }
+    } else {
+      ctx.fillStyle = rgbToCss(resolveColor(this.window.background, 1), 1);
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    this.rects = {};
+    for (const item of this.scene) {
+      const spec = item.spec, alpha = spec.opacity ?? 1.0;
+      const box = this.computeItemBox(item);
+      if (!spec.free) { spec.dx = box.x - box.bx; spec.dy = box.y - box.by; }
+      this.rects[item.name] = box;
+      if (alpha <= 0) continue;
+
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      const cx = box.x + box.w / 2, cy = box.y + box.h / 2;
+      if (spec.rotation) {
+        ctx.translate(cx, cy);
+        ctx.rotate((spec.rotation * Math.PI) / 180);
+        ctx.translate(-cx, -cy);
+      }
+
+      if (spec.kind === "shape") {
+        ctx.fillStyle = rgbToCss(resolveColor(spec.color || "white", 1), 1);
+        const [shapeType, sides] = spec.shape || ["polygon", 4];
+        if (shapeType === "circle") {
+          ctx.beginPath();
+          ctx.ellipse(cx, cy, Math.max(1, box.w / 2), Math.max(1, box.h / 2), 0, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (sides === 4) {
+          ctx.fillRect(box.x, box.y, box.w, box.h);
+        } else {
+          const pts = [];
+          for (let i = 0; i < sides; i++) {
+            const ang = -Math.PI / 2 + (2 * Math.PI * i) / sides;
+            pts.push([Math.cos(ang), Math.sin(ang)]);
+          }
+          const minX = Math.min(...pts.map(p => p[0])), maxX = Math.max(...pts.map(p => p[0]));
+          const minY = Math.min(...pts.map(p => p[1])), maxY = Math.max(...pts.map(p => p[1]));
+          ctx.beginPath();
+          pts.forEach((p, idx) => {
+            const px = box.x + ((p[0] - minX) / (maxX - minX)) * box.w;
+            const py = box.y + ((p[1] - minY) / (maxY - minY)) * box.h;
+            if (idx === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          });
+          ctx.closePath();
+          ctx.fill();
+        }
+      } else if (spec.kind === "text") {
+        ctx.fillStyle = rgbToCss(resolveColor(spec.color || "white", 1), 1);
+        ctx.font = `600 ${spec.size}px ${spec.font}`;
+        ctx.textBaseline = "top";
+        ctx.fillText(this.getTextString(spec), box.x, box.y);
+      } else if (spec.kind === "image") {
+        const img = this.resolveAssetImage(spec.picture);
+        if (img && img.complete && img.naturalWidth) ctx.drawImage(img, box.x, box.y, box.w, box.h);
+      }
+      ctx.restore();
+    }
+
+    for (const p of this.particles) {
+      const t = p.age / p.life;
+      const sz = p.shrink ? p.size * (1 - t) : p.size;
+      if (sz < 0.5) continue;
+      ctx.save();
+      ctx.globalAlpha = p.fade ? Math.max(0, 1 - t) : 1;
+      ctx.fillStyle = rgbToCss(p.color, 1);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, sz / 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  handleCanvasClick(x, y, button = "left") {
+    this.mouse = { x, y };
+    const key = button === "right" ? "on_click_right" : button === "middle" ? "on_click_middle" : "on_click";
+    for (let i = this.scene.length - 1; i >= 0; i--) {
+      const item = this.scene[i];
+      if (!item.spec[key] || (item.spec.opacity ?? 1) <= 0) continue;
+      const r = this.rects[item.name];
+      if (r && x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) {
+        const prev = this.bindings;
+        this.bindings = { [item.base]: item };
+        try { this.runBlockSync(item.spec[key]); }
+        catch (e) { this.callbacks.onError(e); }
+        finally { this.bindings = prev; }
+        break;
+      }
+    }
+    for (const h of this.handlers) {
+      if (h.type === "click" && h.button === button) {
+        try { this.runBlockSync(h.body); } catch (e) { this.callbacks.onError(e); }
+      }
+    }
+  }
+
+  startLoop() {
+    this.running = true;
+    this.lastTime = performance.now();
+    const tick = (now) => {
+      if (!this.running || this.aborted) return;
+      const dt = Math.min((now - this.lastTime) / 1000, 0.05);
+      this.lastTime = now;
+      try { this.stepFrame(dt); }
+      catch (e) { this.stop(); this.callbacks.onError(e); return; }
+      this.rafId = requestAnimationFrame(tick);
+    };
+    this.rafId = requestAnimationFrame(tick);
+  }
+
+  stop() {
+    this.running = false;
+    this.aborted = true;
+    if (this.rafId) cancelAnimationFrame(this.rafId);
+  }
+}
+
+
+/**
+ * ============================================================================
+ * MINIMAL UI CONTROLLER
+ * ============================================================================
+ */
+const editor = document.getElementById("code-editor");
+const lineNumbers = document.getElementById("line-numbers");
+const consoleOutput = document.getElementById("console-output");
+const consoleBadge = document.getElementById("console-badge");
+const canvas = document.getElementById("stage-canvas");
+const toastEl = document.getElementById("toast");
+
+let activeRuntime = null;
+let errorLineNumber = null;
+let consoleCount = 0;
+let pendingAskResolve = null;
+
+function showToast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.remove("opacity-0");
+  clearTimeout(toastEl._t);
+  toastEl._t = setTimeout(() => toastEl.classList.add("opacity-0"), 1800);
+}
+
+// Theme Toggle (Black/Red Default <-> White/Pink Light Mode)
+const themeToggleBtn = document.getElementById("btn-theme-toggle");
+themeToggleBtn.addEventListener("click", () => {
+  const isLight = document.body.classList.toggle("light-theme");
+  document.getElementById("theme-icon").textContent = isLight ? "🌙" : "☀️";
+  document.getElementById("theme-label").textContent = isLight ? "Dark Mode" : "Light Mode";
+});
+
+// Output Tabs (Stage <-> Console)
+const tabStage = document.getElementById("tab-stage");
+const tabConsole = document.getElementById("tab-console");
+const viewStage = document.getElementById("view-stage");
+const viewConsole = document.getElementById("view-console");
+
+function switchOutputTab(tab) {
+  if (tab === "stage") {
+    tabStage.className = "accent-pill text-xs font-semibold px-3 py-1 rounded-md cursor-pointer transition";
+    tabConsole.className = "text-muted hover:text-[var(--text-main)] text-xs font-semibold px-3 py-1 rounded-md cursor-pointer transition flex items-center gap-1.5";
+    viewStage.classList.remove("hidden");
+    viewConsole.classList.add("hidden");
+  } else {
+    tabConsole.className = "accent-pill text-xs font-semibold px-3 py-1 rounded-md cursor-pointer transition flex items-center gap-1.5";
+    tabStage.className = "text-muted hover:text-[var(--text-main)] text-xs font-semibold px-3 py-1 rounded-md cursor-pointer transition";
+    viewConsole.classList.remove("hidden");
+    viewStage.classList.add("hidden");
+    consoleBadge.classList.add("hidden");
+  }
+}
+
+tabStage.addEventListener("click", () => switchOutputTab("stage"));
+tabConsole.addEventListener("click", () => switchOutputTab("console"));
+
+// Line Numbers & Tab Support
+function updateLineNumbers() {
+  const lines = editor.value.split("\n");
+  lineNumbers.innerHTML = lines.map((_, i) => {
+    const ln = i + 1;
+    return `<div class="line-num-item${ln === errorLineNumber ? " line-num-error" : ""}">${ln}</div>`;
+  }).join("");
+  lineNumbers.scrollTop = editor.scrollTop;
+}
+
+function updateCursorPos() {
+  const upTo = editor.value.slice(0, editor.selectionStart).split("\n");
+  document.getElementById("cursor-pos").textContent = `Ln ${upTo.length}, Col ${upTo[upTo.length - 1].length + 1}`;
+}
+
+editor.addEventListener("input", () => {
+  if (errorLineNumber !== null) errorLineNumber = null;
+  updateLineNumbers();
+  updateCursorPos();
+});
+editor.addEventListener("scroll", () => { lineNumbers.scrollTop = editor.scrollTop; });
+editor.addEventListener("click", updateCursorPos);
+editor.addEventListener("keyup", updateCursorPos);
+editor.addEventListener("keydown", (e) => {
+  if (e.key === "Tab") {
+    e.preventDefault();
+    const s = editor.selectionStart, end = editor.selectionEnd;
+    editor.value = editor.value.substring(0, s) + "    " + editor.value.substring(end);
+    editor.selectionStart = editor.selectionEnd = s + 4;
+    updateLineNumbers();
+    updateCursorPos();
+  }
+});
+
+// Console Helpers
+function clearConsole() {
+  consoleOutput.innerHTML = "";
+  consoleCount = 0;
+  consoleBadge.textContent = "0";
+  consoleBadge.classList.add("hidden");
+  document.getElementById("console-input-bar").classList.add("hidden");
+}
+
+function appendConsole(text, colorRgb = null, isError = false) {
+  if (consoleCount === 0) consoleOutput.innerHTML = "";
+  consoleCount++;
+  consoleBadge.textContent = String(consoleCount);
+  if (viewConsole.classList.contains("hidden")) {
+    consoleBadge.classList.remove("hidden");
+  }
+
+  const row = document.createElement("div");
+  if (isError) {
+    row.className = "px-3 py-2 rounded-lg font-semibold border";
+    row.style.backgroundColor = "var(--accent-soft)";
+    row.style.borderColor = "var(--accent-border)";
+    row.style.color = "var(--accent)";
+  } else {
+    row.className = "leading-relaxed";
+    if (colorRgb) row.style.color = `rgb(${colorRgb[0]}, ${colorRgb[1]}, ${colorRgb[2]})`;
+  }
+  row.textContent = text;
+  consoleOutput.appendChild(row);
+  consoleOutput.scrollTop = consoleOutput.scrollHeight;
+}
+
+function submitConsoleInput() {
+  if (!pendingAskResolve) return;
+  const field = document.getElementById("console-input-field");
+  const val = field.value;
+  appendConsole(`> ${val}`);
+  document.getElementById("console-input-bar").classList.add("hidden");
+  const res = pendingAskResolve;
+  pendingAskResolve = null;
+  res(val);
+}
+
+document.getElementById("console-input-submit").addEventListener("click", submitConsoleInput);
+document.getElementById("console-input-field").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") submitConsoleInput();
+});
+
+// Images & Audio Assets Grid
+function renderAssetsGrid() {
+  const grid = document.getElementById("assets-grid");
+  grid.innerHTML = "";
+
+  Object.values(uploadedAssets).forEach(asset => {
+    const card = document.createElement("div");
+    card.className = "sub-bg border rounded-xl p-2.5 flex items-center gap-2.5 group relative transition hover:border-[var(--accent)] cursor-pointer";
+    card.title = `Click to copy "${asset.name}"`;
+
+    // Click card to copy quoted filename
+    card.addEventListener("click", () => {
+      const temp = document.createElement("textarea");
+      temp.value = `"${asset.name}"`;
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand("copy");
+      document.body.removeChild(temp);
+      showToast(`Copied "${asset.name}"`);
+    });
+
+    if (asset.type === "image") {
+      const img = document.createElement("img");
+      img.src = asset.dataUrl;
+      img.alt = asset.name;
+      img.className = "w-9 h-9 object-contain rounded-md shrink-0";
+      card.appendChild(img);
+    } else {
+      const playIcon = document.createElement("button");
+      playIcon.className = "w-9 h-9 rounded-md accent-pill flex items-center justify-center shrink-0 cursor-pointer";
+      playIcon.innerHTML = `<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>`;
+      playIcon.title = "Preview audio";
+      playIcon.addEventListener("click", (e) => {
+        e.stopPropagation();
+        new Audio(asset.dataUrl).play().catch(() => {});
+      });
+      card.appendChild(playIcon);
+    }
+
+    const info = document.createElement("div");
+    info.className = "min-w-0 flex-1 pr-4";
+    info.innerHTML = `
+      <div class="text-xs font-semibold truncate">${asset.name}</div>
+      <div class="text-[10px] text-muted uppercase">${asset.type}</div>
+    `;
+    card.appendChild(info);
+
+    // Delete button
+    const delBtn = document.createElement("button");
+    delBtn.className = "absolute top-1.5 right-1.5 w-5 h-5 rounded-md text-muted hover:text-[var(--accent)] opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-xs font-bold cursor-pointer";
+    delBtn.textContent = "×";
+    delBtn.title = "Remove asset";
+    delBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      delete uploadedAssets[asset.name];
+      renderAssetsGrid();
+    });
+    card.appendChild(delBtn);
+
+    grid.appendChild(card);
+  });
+}
+
+function handleFilesUpload(files) {
+  Array.from(files).forEach(file => {
+    const isImg = file.type.startsWith("image/");
+    const isAud = file.type.startsWith("audio/");
+    if (!isImg && !isAud) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      uploadedAssets[file.name] = {
+        name: file.name,
+        type: isImg ? "image" : "audio",
+        dataUrl: ev.target.result
+      };
+      renderAssetsGrid();
+      showToast(`Added ${file.name}`);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+document.getElementById("asset-upload-input").addEventListener("change", (e) => {
+  handleFilesUpload(e.target.files);
+  e.target.value = "";
+});
+
+const dropzone = document.getElementById("asset-dropzone");
+dropzone.addEventListener("dragover", (e) => { e.preventDefault(); });
+dropzone.addEventListener("drop", (e) => {
+  e.preventDefault();
+  if (e.dataTransfer.files.length) handleFilesUpload(e.dataTransfer.files);
+});
+
+// Execution Controls
+function setStatus(running, label) {
+  const dot = document.getElementById("stage-status-dot");
+  dot.style.backgroundColor = running ? "var(--accent)" : "#71717a";
+  document.getElementById("stage-status-text").textContent = label;
+}
+
+function stopProject() {
+  if (activeRuntime) {
+    activeRuntime.stop();
+    activeRuntime = null;
+  }
+  if (pendingAskResolve) {
+    pendingAskResolve("");
+    pendingAskResolve = null;
+  }
+  document.getElementById("console-input-bar").classList.add("hidden");
+  setStatus(false, "Stopped");
+}
+
+async function runProject() {
+  stopProject();
+  clearConsole();
+  errorLineNumber = null;
+  updateLineNumbers();
+
+  let program;
+  try {
+    program = parseProgram(loadLines(editor.value));
+  } catch (err) {
+    handleError(err);
+    return;
+  }
+
+  const runtime = new CrimRuntime(canvas, uploadedAssets, {
+    onSay: (text, color) => {
+      appendConsole(text, color, false);
+      if (!runtime.displayOpen) switchOutputTab("console");
+    },
+    onAsk: (promptText) => {
+      switchOutputTab("console");
+      appendConsole(promptText, null, false);
+      const bar = document.getElementById("console-input-bar");
+      const field = document.getElementById("console-input-field");
+      document.getElementById("console-prompt-label").textContent = promptText;
+      field.value = "";
+      bar.classList.remove("hidden");
+      field.focus();
+      return new Promise(resolve => { pendingAskResolve = resolve; });
+    },
+    onError: (err) => handleError(err)
+  });
+
+  activeRuntime = runtime;
+  setStatus(true, "Running");
+
+  try {
+    await runtime.runBlock(program);
+    if (runtime.aborted) return;
+
+    if (runtime.displayOpen) {
+      switchOutputTab("stage");
+      runtime.render();
+      runtime.startLoop();
+    } else {
+      switchOutputTab("console");
+      setStatus(false, "Finished");
+    }
+  } catch (err) {
+    runtime.stop();
+    handleError(err);
+  }
+}
+
+function handleError(err) {
+  setStatus(false, "Error");
+  switchOutputTab("console");
+  const msg = err instanceof CrimError ? err.message : `Error: ${err.message}`;
+  appendConsole(msg, null, true);
+  if (err.line) {
+    errorLineNumber = err.line;
+    updateLineNumbers();
+  }
+}
+
+document.getElementById("btn-run").addEventListener("click", runProject);
+document.getElementById("btn-stop").addEventListener("click", stopProject);
+
+// Keyboard & Mouse Forwarding
+window.addEventListener("keydown", (e) => {
+  if (!activeRuntime || !activeRuntime.running) return;
+  if (document.activeElement === editor || document.activeElement === document.getElementById("console-input-field")) return;
+  if ([" ", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) e.preventDefault();
+  const k = normalizeKey(e.key);
+  if (!activeRuntime.keysDown.has(k)) {
+    activeRuntime.keysDown.add(k);
+    activeRuntime.keysPressed.add(k);
+  }
+});
+
+window.addEventListener("keyup", (e) => {
+  if (!activeRuntime) return;
+  activeRuntime.keysDown.delete(normalizeKey(e.key));
+});
+
+canvas.addEventListener("mousemove", (e) => {
+  if (!activeRuntime) return;
+  const r = canvas.getBoundingClientRect();
+  activeRuntime.mouse = {
+    x: Math.round((e.clientX - r.left) * (canvas.width / r.width)),
+    y: Math.round((e.clientY - r.top) * (canvas.height / r.height))
+  };
+});
+
+canvas.addEventListener("mousedown", (e) => {
+  if (!activeRuntime || !activeRuntime.running) return;
+  const r = canvas.getBoundingClientRect();
+  const btn = e.button === 2 ? "right" : e.button === 1 ? "middle" : "left";
+  activeRuntime.handleCanvasClick((e.clientX - r.left) * (canvas.width / r.width), (e.clientY - r.top) * (canvas.height / r.height), btn);
+});
+canvas.addEventListener("contextmenu", (e) => e.preventDefault());
+
+// Example Selector & Export .crim
+document.getElementById("example-select").addEventListener("change", (e) => {
+  const code = EXAMPLES[e.target.value];
+  if (code) {
+    stopProject();
+    editor.value = code;
+    errorLineNumber = null;
+    updateLineNumbers();
+    updateCursorPos();
+    runProject();
+  }
+});
+
+document.getElementById("btn-download-crim").addEventListener("click", () => {
+  const blob = new Blob([editor.value], { type: "text/plain;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "project.crim";
+  a.click();
+  showToast("Exported project.crim");
+});
+
+// Boot
+window.addEventListener("load", () => {
+  renderAssetsGrid();
+  editor.value = EXAMPLES.catch_star;
+  updateLineNumbers();
+  updateCursorPos();
+});
+
+// Welcome screen -> editor
+ document.getElementById("btn-open-editor").addEventListener("click", () => {
+  document.getElementById("welcome-screen").classList.add("hidden");
+  document.getElementById("app-header").classList.remove("hidden");
+  document.getElementById("app-main").classList.remove("hidden");
+  document.getElementById("app-main").classList.add("flex");
+  updateLineNumbers();
+  updateCursorPos();
+});
+</script>
 </body>
 </html>
