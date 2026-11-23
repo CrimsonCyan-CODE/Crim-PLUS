@@ -137,8 +137,37 @@
       overflow: auto;
     }
 
+    .file-tab { padding: 7px 11px; border: 1px solid var(--border-main); border-bottom: 0; border-radius: 8px 8px 0 0; background: var(--bg-sub); color: var(--text-muted); font-size: 11px; white-space: nowrap; }
+    .file-tab.active { background: var(--bg-app); color: var(--text-main); border-color: var(--accent-border); box-shadow: inset 0 2px 0 var(--accent); }
+    .file-tab:hover { color: var(--text-main); }
+    .file-strip { background: var(--bg-panel); border-bottom: 1px solid var(--border-main); }
+    .save-indicator { color: var(--text-muted); font-size: 10px; white-space: nowrap; }
+    .modal-backdrop { background: rgba(0,0,0,.68); backdrop-filter: blur(4px); }
+    .module-row { border: 1px solid var(--border-main); background: var(--bg-sub); border-radius: 10px; padding: 10px 12px; }
     .stage-well {
       background-color: var(--stage-well);
+    }
+
+    /* Draggable workspace splitters */
+    #editor-pane { flex: 0 0 var(--editor-pane-size, 50%); min-width: 0; min-height: 0; }
+    #right-pane { flex: 1 1 0; min-width: 0; min-height: 0; }
+    #stage-pane { flex: 0 0 var(--stage-pane-size, 60%); min-height: 0; }
+    #asset-dropzone { flex: 1 1 0; min-height: 0; }
+    .resize-splitter { flex: 0 0 8px; background: var(--bg-panel); position: relative; z-index: 5; touch-action: none; user-select: none; }
+    .resize-splitter::after { content: ''; position: absolute; background: var(--border-main); border-radius: 4px; }
+    .vertical-splitter { cursor: col-resize; }
+    .vertical-splitter::after { width: 3px; height: 34px; left: 50%; top: 50%; transform: translate(-50%,-50%); }
+    .horizontal-splitter { cursor: row-resize; }
+    .horizontal-splitter::after { height: 3px; width: 34px; left: 50%; top: 50%; transform: translate(-50%,-50%); }
+    .resize-splitter:hover, .resize-splitter.dragging { background: var(--accent-soft); }
+    .resize-splitter:hover::after, .resize-splitter.dragging::after { background: var(--accent); }
+    body.resizing-panels { user-select: none !important; }
+    @media (max-width: 1023px) {
+      #app-main { flex-direction: column !important; }
+      #editor-pane { flex: 0 0 var(--editor-pane-size-mobile, 50%); width: 100%; }
+      #right-pane { flex: 1 1 0; width: 100%; }
+      .vertical-splitter { cursor: row-resize; }
+      .vertical-splitter::after { width: 34px; height: 3px; }
     }
   </style>
 </head>
@@ -221,9 +250,9 @@
         <option value="orbit_shapes">Example: Orbital Shapes</option>
       </select>
 
-      <button id="btn-download-crim" class="sub-bg border hover:opacity-80 text-xs font-semibold px-3 py-1.5 rounded-lg transition cursor-pointer">
-        Export .crim
-      </button>
+      <button id="btn-download-crim" class="sub-bg border hover:opacity-80 text-xs font-semibold px-3 py-1.5 rounded-lg transition cursor-pointer">Export .crim</button>
+      <button id="btn-export-project" class="sub-bg border hover:opacity-80 text-xs font-semibold px-3 py-1.5 rounded-lg transition cursor-pointer">Export Project</button>
+      <button id="btn-import-project" class="sub-bg border hover:opacity-80 text-xs font-semibold px-3 py-1.5 rounded-lg transition cursor-pointer">Open Project</button>
 
       <button id="btn-theme-toggle" class="accent-pill text-xs font-semibold px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5" title="Switch theme">
         <span id="theme-icon">☀️</span>
@@ -236,25 +265,41 @@
   <main id="app-main" class="hidden flex-1 flex-col lg:flex-row overflow-hidden">
 
     <!-- LEFT HALF (50%): PURE CODE EDITOR -->
-    <section class="w-full lg:w-1/2 h-1/2 lg:h-full flex flex-col border-b lg:border-b-0 lg:border-r border-theme">
+    <section id="editor-pane" class="w-full lg:w-auto h-1/2 lg:h-full flex flex-col border-b lg:border-b-0 lg:border-r border-theme">
+      <div class="file-strip px-3 pt-2 flex items-end gap-1 shrink-0">
+        <div id="file-tabs" class="flex items-end gap-1 overflow-x-auto flex-1 min-w-0"></div>
+        <button id="btn-new-file" class="accent-btn rounded-md px-2.5 py-1.5 text-xs font-bold mb-1" title="Add a file">＋</button>
+        <button id="btn-import-file" class="sub-bg border rounded-md px-2.5 py-1.5 text-xs mb-1" title="Import a text file of any extension">Import</button>
+        <button id="btn-modules" class="sub-bg border rounded-md px-2.5 py-1.5 text-xs mb-1" title="ROSE modules">Modules</button>
+        <input id="file-import-input" type="file" accept="*/*" class="hidden">
+        <input id="project-import-input" type="file" accept=".crim,application/json,.json" class="hidden">
+      </div>
       <div class="panel-bg border-b px-4 py-2 flex items-center justify-between text-xs shrink-0">
         <span class="font-semibold">Code</span>
-        <span id="cursor-pos" class="text-muted font-mono-code text-[11px]">Ln 1, Col 1</span>
+        <span class="flex items-center gap-3"><span id="save-status" class="save-indicator">Not saved</span><span id="cursor-pos" class="text-muted font-mono-code text-[11px]">Ln 1, Col 1</span></span>
       </div>
 
-      <div class="editor-shell">
+      <div id="editor-shell" class="editor-shell">
         <div id="line-numbers" class="line-numbers font-mono-code">
           <div class="line-num-item">1</div>
         </div>
         <textarea id="code-editor" class="font-mono-code" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="Write your Crim+ code here..."></textarea>
       </div>
+      <div id="file-preview" class="hidden flex-1 min-h-0 overflow-auto bg-[var(--bg-app)] p-6 items-center justify-center">
+        <div class="max-w-full flex flex-col items-center gap-3">
+          <img id="file-preview-image" class="hidden max-w-full max-h-[65vh] object-contain rounded-lg border border-theme shadow-lg" alt="File preview">
+          <div id="file-preview-details" class="text-xs text-muted font-mono-code"></div>
+        </div>
+      </div>
     </section>
 
+    <div id="workspace-splitter" class="resize-splitter vertical-splitter" role="separator" aria-label="Resize code editor and output panels" tabindex="0" title="Drag to resize panels"></div>
+
     <!-- RIGHT HALF (50%): TOP OUTPUTS (60%) + BOTTOM IMAGES & AUDIO (40%) -->
-    <section class="w-full lg:w-1/2 h-1/2 lg:h-full flex flex-col overflow-hidden">
+    <section id="right-pane" class="w-full lg:w-auto h-1/2 lg:h-full flex flex-col overflow-hidden">
 
       <!-- TOP RIGHT (60%): OUTPUT AREA (STAGE & CONSOLE) -->
-      <div class="h-[60%] flex flex-col border-b border-theme overflow-hidden">
+      <div id="stage-pane" class="flex flex-col border-b border-theme overflow-hidden">
         <!-- Output Header & Tabs -->
         <div class="panel-bg border-b px-4 py-2 flex items-center justify-between shrink-0">
           <div class="flex items-center gap-2">
@@ -295,8 +340,10 @@
         </div>
       </div>
 
+      <div id="stage-assets-splitter" class="resize-splitter horizontal-splitter" role="separator" aria-label="Resize stage and assets panels" tabindex="0" title="Drag to resize stage and assets"></div>
+
       <!-- BOTTOM RIGHT (40%): IMAGES & AUDIO -->
-      <div id="asset-dropzone" class="h-[40%] flex flex-col overflow-hidden panel-bg">
+      <div id="asset-dropzone" class="flex flex-col overflow-hidden panel-bg">
         <div class="border-b border-theme px-4 py-2 flex items-center justify-between shrink-0">
           <div class="flex items-center gap-2">
             <span class="font-semibold text-xs">Images & Audio</span>
@@ -322,6 +369,18 @@
   <div id="toast" class="fixed bottom-4 right-4 accent-btn text-xs font-semibold px-3.5 py-2 rounded-lg shadow-lg opacity-0 pointer-events-none transition-opacity duration-200 z-50">
     Copied!
   </div>
+
+
+<div id="modules-modal" class="hidden fixed inset-0 z-[120] modal-backdrop items-center justify-center p-4">
+  <div class="panel-bg border border-theme rounded-2xl w-full max-w-xl max-h-[85vh] overflow-y-auto shadow-2xl">
+    <div class="p-5 border-b border-theme flex items-center justify-between"><div><h2 class="font-bold text-lg">ROSE Modules</h2><p class="text-muted text-xs mt-1">Browser runtime compatibility</p></div><button id="btn-close-modules" class="sub-bg border rounded-lg px-3 py-1.5 text-sm">Close</button></div>
+    <div class="p-5 space-y-3">
+      <p class="text-sm text-muted">Studio loads Crim+ source packages from the official ROSE registry and provides browser-safe adapters for CrimCobra packages. Browser security limits filesystem and network access. Crim+ scripts can write text into files inside the current Studio project.</p>
+      <div id="module-list" class="space-y-2"></div>
+      <div class="text-xs text-muted border-t border-theme pt-3">Crim+ source packages are compiled on demand. CrimCobra packages use browser-safe adapters: filetools is limited to project files, systemtools reports browser information, runner supports synchronous project scripts, and webtools currently supports URL encoding only. Browser fetch requests require async runtime support and CORS permission.</div>
+    </div>
+  </div>
+</div>
 
 <script>
 /**
@@ -549,7 +608,7 @@ const POSITIONS = {
   "bottom left": [0.0, 1.0], "bottom right": [1.0, 1.0]
 };
 
-const MODULES = new Set(["time", "display", "sound", "random", "tilemap"]);
+const MODULES = new Set(["time", "display", "sound", "random", "tilemap", "mathtools", "texttools", "ui", "colors", "json", "physics", "runner", "csv", "webtools", "filetools", "systemtools"]);
 const STATEMENT_STARTERS = new Set([
   "say", "set", "change", "move", "play", "loop", "make", "wait", "stalk", "orbit", "patrol", "run", "perform",
   "stop", "clear", "text", "if", "repeat", "forever", "until", "always", "when", "display", "open", "this",
@@ -1345,6 +1404,14 @@ function parseStatement(lines, pos) {
   if ((m = text.match(/^give back\s+(.+)$/i))) return { stmt: ["return", parseOperand(m[1], number), number], pos: pos + 1 };
   if (/^stop$/i.test(text)) return { stmt: ["stop", number], pos: pos + 1 };
 
+  // Timing and project-file output are asynchronous/synchronous runtime statements respectively.
+  if ((m = text.match(/^wait\s+(.+?)\s+seconds?$/i))) {
+    return { stmt: ["wait", parseOperand(m[1], number), number], pos: pos + 1 };
+  }
+  if ((m = text.match(/^write\s+(.+?)\s+to\s+file\s+(["'])(.*?)\2$/i))) {
+    return { stmt: ["write_file", parseOperand(m[1], number), m[3], number], pos: pos + 1 };
+  }
+
   if ((m = text.match(/^set\s+(\w+)(?:\[(.+?)\])?\s+to\s+(.+)$/i))) {
     const idx = m[2] ? parseOperand(m[2], number) : null;
     return { stmt: ["set", m[1], idx, splitJoined(m[3], number).map(p => parseOperand(p, number)), number], pos: pos + 1 };
@@ -1395,6 +1462,7 @@ class CrimRuntime {
     this.env = {};
     this.defs = {};
     this.modules = new Set();
+    this.nativeFunctions = createBrowserModuleFunctions(this);
     this.elements = {};
     this.scene = [];
     this.groups = {};
@@ -1691,6 +1759,7 @@ class CrimRuntime {
   }
 
   callFunction(name, args, line) {
+    if (this.nativeFunctions && this.nativeFunctions[name]) return this.nativeFunctions[name](...args);
     if (!this.defs[name]) throw new CrimError(`Line ${line}: Unknown instruction '${name}'.`, line);
     const [body, params] = this.defs[name];
     if (args.length !== params.length) throw new CrimError(`Line ${line}: '${name}' expects ${params.length} inputs.`, line);
@@ -1771,6 +1840,11 @@ class CrimRuntime {
     const kind = stmt[0];
     if (kind === "say") {
       this.callbacks.onSay(showVal(this.evalJoined(stmt[1], stmt[4])), stmt[5]);
+    } else if (kind === "write_file") {
+      const [_, valueNode, filename, line] = stmt;
+      if (!this.callbacks.onWriteFile) throw new CrimError(`Line ${line}: File writing is unavailable in this environment.`, line);
+      const value = this.evalValue(valueNode, line);
+      this.callbacks.onWriteFile(filename, showVal(value), line);
     } else if (kind === "set") {
       const [_, name, idx, parts, line] = stmt;
       const val = this.evalJoined(parts, line);
@@ -2256,6 +2330,264 @@ let errorLineNumber = null;
 let consoleCount = 0;
 let pendingAskResolve = null;
 
+// Multi-file project state. Files may use any text-based extension; only .crim files run in the Crim+ runtime.
+const PROJECT_STORAGE_KEY = "crim-studio-project-v2";
+let projectFiles = [{ id: "main", name: "main.crim", code: EXAMPLES.catch_star }];
+let activeFileId = "main";
+let saveTimer = null;
+const ROSE_REGISTRY_URL = "https://raw.githubusercontent.com/CrimsonCyan-CODE/Crim-PLUS/main/registry.json";
+const ROSE_RAW_BASE = "https://raw.githubusercontent.com/CrimsonCyan-CODE/Crim-PLUS/main/";
+const moduleCatalog = [
+  ["mathtools", "Extra math helpers · ROSE 1.0", "Crim+ source"],
+  ["texttools", "Extended text utilities · ROSE 1.0", "Crim+ source"],
+  ["ui", "Interface and layout helpers · ROSE 1.2", "Crim+ source"],
+  ["colors", "Color utilities · ROSE 1.1", "Crim+ source"],
+  ["json", "JSON parsing and encoding · ROSE 1.5.2", "Crim+ source"],
+  ["physics", "Frame-based 2D physics · ROSE 1.7", "Crim+ source"],
+  ["runner", "Run other Crim+ files · ROSE 1.0", "Browser adapter"],
+  ["csv", "CSV parsing and exporting · ROSE 1.3", "Browser adapter"],
+  ["webtools", "Web requests and URL helpers · ROSE 1.0", "Limited browser adapter"],
+  ["filetools", "Project file utilities · ROSE 1.0", "Browser adapter"],
+  ["systemtools", "Environment and system utilities · ROSE 1.0", "Browser adapter"],
+  ["display", "Browser stage and graphics", "Built in"],
+  ["tilemap", "Tilemap support", "Built in"],
+  ["sound", "Audio support", "Built in"],
+  ["random", "Random values", "Built in"],
+  ["time", "Timing utilities", "Built in"]
+];
+
+function activeFile() { return projectFiles.find(f => f.id === activeFileId) || projectFiles[0]; }
+function cleanProjectFilename(value, fallback="untitled.txt") {
+  const cleaned = String(value || "").trim().replace(/[\\/:*?"<>|]/g, "_");
+  return cleaned || fallback;
+}
+function renderFileTabs() {
+  const host = document.getElementById("file-tabs");
+  host.innerHTML = "";
+  projectFiles.forEach(file => {
+    const tab = document.createElement("button");
+    tab.className = "file-tab" + (file.id === activeFileId ? " active" : "");
+    tab.textContent = file.name;
+    tab.title = "Double-click to rename · Right-click to close · Any text-file extension is allowed";
+    tab.addEventListener("click", () => switchFile(file.id));
+    tab.addEventListener("dblclick", () => renameFile(file.id));
+    tab.addEventListener("contextmenu", e => { e.preventDefault(); if (projectFiles.length > 1 && confirm(`Close ${file.name}?`)) closeFile(file.id); });
+    host.appendChild(tab);
+  });
+}
+function switchFile(id) {
+  const current = activeFile();
+  if (current && current.kind !== "image") current.code = editor.value;
+  activeFileId = id;
+  const next = activeFile();
+  const imageMode = next.kind === "image" && next.dataUrl;
+  document.getElementById("editor-shell").classList.toggle("hidden", !!imageMode);
+  document.getElementById("file-preview").classList.toggle("hidden", !imageMode);
+  document.getElementById("file-preview").classList.toggle("flex", !!imageMode);
+  if (imageMode) {
+    const img = document.getElementById("file-preview-image");
+    img.src = next.dataUrl; img.alt = next.name; img.classList.remove("hidden");
+    document.getElementById("file-preview-details").textContent = `${next.name} · ${next.mimeType || "image"} · Preview only`;
+  } else {
+    editor.value = next.code || "";
+    document.getElementById("file-preview-image").classList.add("hidden");
+  }
+  errorLineNumber = null;
+  renderFileTabs(); updateLineNumbers(); updateCursorPos(); scheduleAutosave();
+}
+function addFile(name, code="", extra={}) {
+  const finalName = cleanProjectFilename(name, `script${projectFiles.length + 1}.crim`);
+  if (projectFiles.some(f => f.name.toLowerCase() === finalName.toLowerCase())) { showToast("A file with that name already exists"); return; }
+  const file = { id: "file_" + Date.now() + "_" + Math.random().toString(36).slice(2,7), name: finalName, code, ...extra };
+  projectFiles.push(file); switchFile(file.id); showToast(`Added ${finalName}`);
+}
+function renameFile(id) {
+  const file = projectFiles.find(f => f.id === id); if (!file) return;
+  const value = prompt("Rename file (you can change its extension too)", file.name); if (value === null) return;
+  const name = cleanProjectFilename(value, file.name);
+  if (projectFiles.some(f => f.id !== id && f.name.toLowerCase() === name.toLowerCase())) { showToast("That filename is already in use"); return; }
+  file.name = name; renderFileTabs(); if (id === activeFileId) switchFile(id); scheduleAutosave(); showToast(`Renamed to ${name}`);
+}
+function closeFile(id) {
+  if (projectFiles.length <= 1) { showToast("A project needs at least one file"); return; }
+  const index = projectFiles.findIndex(f => f.id === id); if (index < 0) return;
+  projectFiles.splice(index, 1);
+  if (activeFileId === id) { const next = projectFiles[Math.max(0, index - 1)]; activeFileId = next.id; editor.value = next.code; updateLineNumbers(); updateCursorPos(); }
+  renderFileTabs(); scheduleAutosave();
+}
+function scheduleAutosave() {
+  const status = document.getElementById("save-status"); if (!status) return;
+  status.textContent = "Saving…";
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try {
+      const current = activeFile(); if (current && current.kind !== "image") current.code = editor.value;
+      localStorage.setItem(PROJECT_STORAGE_KEY, JSON.stringify({ version: 2, files: projectFiles, activeFileId }));
+      status.textContent = "Saved locally";
+    } catch (err) { status.textContent = "Autosave unavailable"; }
+  }, 350);
+}
+function restoreProject() {
+  try {
+    const raw = localStorage.getItem(PROJECT_STORAGE_KEY); if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (!data || !Array.isArray(data.files) || !data.files.length) return false;
+    projectFiles = data.files.filter(f => f && typeof f.name === "string" && typeof f.id === "string" && (typeof f.code === "string" || (f.kind === "image" && typeof f.dataUrl === "string")));
+    if (!projectFiles.length) return false;
+    activeFileId = projectFiles.some(f => f.id === data.activeFileId) ? data.activeFileId : projectFiles[0].id;
+    editor.value = activeFile().code || ""; renderFileTabs(); switchFile(activeFileId);
+    document.getElementById("save-status").textContent = "Restored local project";
+    return true;
+  } catch (_) { return false; }
+}
+function downloadBlob(name, contents, type="text/plain;charset=utf-8") {
+  const blob = new Blob([contents], { type }); const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function renderModuleList() {
+  const host = document.getElementById("module-list"); host.innerHTML = "";
+  moduleCatalog.forEach(([name, description, status]) => {
+    const row = document.createElement("div"); row.className = "module-row flex items-center justify-between gap-3";
+    const left = document.createElement("div");
+    const title = document.createElement("div"); title.className = "font-semibold text-sm"; title.textContent = name;
+    const desc = document.createElement("div"); desc.className = "text-muted text-xs mt-1"; desc.textContent = description;
+    left.append(title, desc);
+    const badge = document.createElement("span"); badge.className = "text-[10px] rounded-full px-2 py-1 " + (status === "Built in" || status === "Crim+ source" || status === "Browser adapter" ? "accent-pill" : "sub-bg text-muted"); badge.textContent = status;
+    row.append(left, badge); host.appendChild(row);
+  });
+}
+
+// ROSE package loading: Crim+ source packages are parsed by the same browser interpreter.
+// Python/CrimCobra packages receive safe browser-native adapters where browser APIs permit it.
+const rosePackageCache = new Map();
+async function fetchRosePackage(name) {
+  if (rosePackageCache.has(name)) return rosePackageCache.get(name);
+  const registryResponse = await fetch(ROSE_REGISTRY_URL, { cache: "no-cache" });
+  if (!registryResponse.ok) throw new Error(`Could not load the ROSE registry (${registryResponse.status})`);
+  const registry = await registryResponse.json();
+  const entry = registry?.packages?.[name];
+  if (!entry?.url) throw new Error(`'${name}' is not in the current ROSE registry`);
+  const response = await fetch(entry.url, { cache: "no-cache" });
+  if (!response.ok) throw new Error(`Could not download ROSE module '${name}' (${response.status})`);
+  const pkg = await response.json();
+  if (pkg.name !== name || !Array.isArray(pkg.files) || !Array.isArray(pkg.python || [])) throw new Error(`The '${name}' package has an invalid ROSE manifest`);
+  rosePackageCache.set(name, pkg);
+  return pkg;
+}
+function getRequestedModules(source) {
+  const found = new Set();
+  for (const line of source.split(/\r?\n/)) {
+    const m = line.trim().match(/^(?:use|this script uses:)\s+([\w,\s]+)$/i);
+    if (m) m[1].split(/\s*(?:,\s*and\s+|,|\s+and\s+)\s*/).forEach(x => { if (x.trim()) found.add(x.trim().toLowerCase()); });
+  }
+  return [...found].filter(x => !["time", "display", "sound", "random", "tilemap"].includes(x));
+}
+async function loadRoseModuleStatements(source) {
+  const names = getRequestedModules(source);
+  const statements = [];
+  for (const name of names) {
+    const pkg = await fetchRosePackage(name);
+    const crimFiles = ["csv", "runner"].includes(name) ? [] : (pkg.files || []).filter(f => typeof f.source === "string" && /\.crim$/i.test(f.name || ""));
+    if (crimFiles.length) {
+      for (const file of crimFiles) {
+        try { statements.push(...parseProgram(loadLines(file.source))); }
+        catch (err) { throw new Error(`ROSE module '${name}' could not be compiled for Studio: ${err.message}`); }
+      }
+    } else if (!(pkg.python || []).length) {
+      throw new Error(`ROSE module '${name}' contains no browser-loadable source`);
+    }
+  }
+  return statements;
+}
+
+function createBrowserModuleFunctions(runtime) {
+  const csv = { rows: [], error: "" };
+  const virtualFiles = () => projectFiles.map(f => f.name);
+  const pathName = value => String(value ?? "").replace(/\\/g, "/").replace(/^\.\//, "");
+  const fns = {
+    // mathtools browser-native helpers (also available when the package source is refreshed).
+    pi: () => Math.PI,
+    square: n => Number(n) ** 2,
+    cube: n => Number(n) ** 3,
+    sign: n => Math.sign(Number(n)),
+    clamp: (v, lo, hi) => Math.min(Number(hi), Math.max(Number(lo), Number(v))),
+    lerp: (a, b, t) => Number(a) + (Number(b) - Number(a)) * Number(t),
+    map_range: (v, a, b, c, d) => Number(b) === Number(a) ? Number(c) : Number(c) + (Number(v) - Number(a)) * (Number(d) - Number(c)) / (Number(b) - Number(a)),
+    percent: (p, w) => Number(w) === 0 ? 0 : Number(p) / Number(w) * 100,
+    hypot: (a, b) => Math.hypot(Number(a), Number(b)),
+    distance: (x1, y1, x2, y2) => Math.hypot(Number(x2)-Number(x1), Number(y2)-Number(y1)),
+    to_radians: d => Number(d) * Math.PI / 180,
+    to_degrees: r => Number(r) * 180 / Math.PI,
+    is_even: n => Number(n) % 2 === 0 ? 1 : 0,
+    is_odd: n => Math.abs(Number(n) % 2) === 1 ? 1 : 0,
+    gcd: (a, b) => { a=Math.abs(Math.trunc(a)); b=Math.abs(Math.trunc(b)); while(b){const t=a%b;a=b;b=t;} return a; },
+    lcm: (a, b) => !Number(a)||!Number(b) ? 0 : Math.abs(Number(a)*Number(b))/fns.gcd(a,b),
+    factorial: n => { n=Math.trunc(Number(n)); if(n<0||n>170) throw new Error("factorial supports integers from 0 to 170 in the browser"); let v=1; for(let i=2;i<=n;i++)v*=i; return v; },
+    fibonacci: n => { n=Math.max(0,Math.min(147,Math.trunc(Number(n)))); let a=0,b=1; for(let i=0;i<n;i++) [a,b]=[b,a+b]; return a; },
+    is_prime: n => { n=Math.trunc(Number(n)); if(n<2)return 0; for(let i=2;i*i<=n;i++)if(n%i===0)return 0; return 1; },
+    // texttools common helpers
+    reverse_text: s => [...String(s)].reverse().join(""),
+    count_text: (s, part) => String(s).split(String(part)).length - 1,
+    replace_text: (s, oldText, newText) => String(s).split(String(oldText)).join(String(newText)),
+    repeat_text: (s, n) => String(s).repeat(Math.max(0,Math.min(10000,Math.trunc(Number(n))))),
+    // colors helpers
+    hex_color: c => { const raw=String(c).trim(); if(/^#[0-9a-f]{6}$/i.test(raw))return raw; const rgb=COLORS[raw.toLowerCase()]; return rgb ? "#"+rgb.map(v=>v.toString(16).padStart(2,"0")).join("") : raw; },
+    // JSON helpers
+    encode_json: value => JSON.stringify(value),
+    decode_json: value => JSON.parse(String(value)),
+    // CSV API, matching the published csv package's public instruction names.
+    parse_csv: source => { csv.error=""; try { const text=String(source).replace(/\r\n?/g,"\n"); const rows=[]; let row=[], field="", quoted=false; for(let i=0;i<text.length;i++){const ch=text[i]; if(quoted){if(ch==='"'&&text[i+1]==='"'){field+='"';i++;}else if(ch==='"')quoted=false;else field+=ch;}else if(ch==='"'&&field==="")quoted=true;else if(ch===","){row.push(field);field="";}else if(ch==="\n"){row.push(field);rows.push(row);row=[];field="";}else field+=ch;} if(quoted)csv.error="Unclosed quoted field"; if(field!==""||row.length||text.endsWith(",")) {row.push(field);rows.push(row);} csv.rows=rows; return rows.length; } catch(e){csv.error=e.message;csv.rows=[];return 0;} },
+    get_row_count: () => csv.rows.length,
+    get_col_count: () => csv.rows.reduce((m,r)=>Math.max(m,r.length),0),
+    get_error: () => csv.error,
+    get_cell: (r,c) => csv.rows[Math.trunc(r)]?.[Math.trunc(c)] ?? "",
+    get_row: r => (csv.rows[Math.trunc(r)]||[]).map(v=>{v=String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(","),
+    reset_csv: () => {csv.rows=[];csv.error="";return 1;},
+    to_csv: () => csv.rows.map((_,i)=>fns.get_row(i)).join("\n"),
+    csv_escape_cell: v => {v=String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;},
+    // filetools works only inside the Studio project workspace; it cannot access the user's disk.
+    list_files: folder => folder && folder!=="." ? [] : virtualFiles(),
+    folder_exists: folder => folder === "." ? 1 : 0,
+    file_size: name => {const f=projectFiles.find(x=>x.name===pathName(name)); if(!f)throw new Error(`Cannot find project file '${name}'`);return new Blob([f.code]).size;},
+    file_extension: name => {const m=String(name).toLowerCase().match(/\.[^.\/]+$/);return m?m[0]:"";},
+    copy_file: (from,to) => {const f=projectFiles.find(x=>x.name===pathName(from));if(!f)throw new Error(`Cannot find project file '${from}'`);if(projectFiles.some(x=>x.name===pathName(to)))throw new Error(`'${to}' already exists`);projectFiles.push({id:"file_"+Date.now()+Math.random(),name:pathName(to),code:f.code});renderFileTabs();scheduleAutosave();return 1;},
+    move_file: (from,to) => {const f=projectFiles.find(x=>x.name===pathName(from));if(!f)throw new Error(`Cannot find project file '${from}'`);if(projectFiles.some(x=>x.name===pathName(to)))throw new Error(`'${to}' already exists`);f.name=pathName(to);renderFileTabs();scheduleAutosave();return 1;},
+    delete_folder: () => {throw new Error("Studio's virtual workspace does not expose folder deletion");},
+    // systemtools browser-safe information
+    os_name: () => "Browser",
+    python_version: () => "Not available in browser Studio",
+    today: () => new Date().toISOString().slice(0,10),
+    now: () => new Date().toLocaleTimeString(),
+    timestamp: () => Date.now()/1000,
+    cpu_count: () => navigator.hardwareConcurrency || 1,
+    env_var: name => String(name).toUpperCase()==="USER_AGENT" ? navigator.userAgent : "",
+    open_web_page: url => {const u=String(url); if(!/^https?:\/\//i.test(u))return 0; window.open(u,"_blank","noopener,noreferrer"); return 1;},
+    beep: () => {try{const C=window.AudioContext||window.webkitAudioContext;const c=new C();const o=c.createOscillator();o.connect(c.destination);o.start();o.stop(c.currentTime+.08);}catch{} return 1;},
+    // URL encoding is synchronous; fetch_text/fetch_json are deliberately not faked because fetch is async and CORS-controlled.
+    url_encode: value => encodeURIComponent(String(value)),
+    // runner executes another project file in an isolated runtime with captured output.
+    run_crim: filename => {
+      const target = projectFiles.find(f => f.name === pathName(filename));
+      runtime.env.crim_output = "";
+      runtime.env.crim_error = "";
+      if (!target) { runtime.env.crim_error = `Cannot find project file '${filename}'`; return 0; }
+      try {
+        const child = new CrimRuntime(canvas, uploadedAssets, {
+          onSay: value => { runtime.env.crim_output += (runtime.env.crim_output ? "\n" : "") + showVal(value); },
+          onAsk: () => { throw new Error("run_crim cannot run scripts that ask for interactive input"); },
+          onError: err => { runtime.env.crim_error = err.message; }
+        });
+        const childProgram = parseProgram(loadLines(target.code));
+        child.runBlockSync(childProgram);
+        if (runtime.env.crim_error) return 0;
+        return 1;
+      } catch (err) { runtime.env.crim_error = err.message; return 0; }
+    }
+  };
+  return fns;
+}
+
 function showToast(msg) {
   toastEl.textContent = msg;
   toastEl.classList.remove("opacity-0");
@@ -2314,6 +2646,7 @@ editor.addEventListener("input", () => {
   if (errorLineNumber !== null) errorLineNumber = null;
   updateLineNumbers();
   updateCursorPos();
+  scheduleAutosave();
 });
 editor.addEventListener("scroll", () => { lineNumbers.scrollTop = editor.scrollTop; });
 editor.addEventListener("click", updateCursorPos);
@@ -2496,10 +2829,18 @@ async function runProject() {
   clearConsole();
   errorLineNumber = null;
   updateLineNumbers();
+  const current = activeFile();
+  if (current && !/\.crim$/i.test(current.name)) {
+    appendConsole(`Cannot run ${current.name}: Crim+ Studio executes .crim files only. This file is still editable and can be exported.`, "#f59e0b", false);
+    switchOutputTab("console");
+    setStatus(false, "Not a Crim+ file");
+    return;
+  }
 
   let program;
   try {
-    program = parseProgram(loadLines(editor.value));
+    const moduleStatements = await loadRoseModuleStatements(editor.value);
+    program = [...moduleStatements, ...parseProgram(loadLines(editor.value))];
   } catch (err) {
     handleError(err);
     return;
@@ -2520,6 +2861,22 @@ async function runProject() {
       bar.classList.remove("hidden");
       field.focus();
       return new Promise(resolve => { pendingAskResolve = resolve; });
+    },
+    onWriteFile: (filename, contents, line) => {
+      const safeName = cleanProjectFilename(filename, "output.txt");
+      const currentFile = activeFile();
+      if (currentFile && currentFile.kind !== "image") currentFile.code = editor.value;
+      let target = projectFiles.find(file => file.name.toLowerCase() === safeName.toLowerCase());
+      if (target && target.kind === "image") throw new CrimError(`Line ${line}: '${safeName}' is an image asset and cannot be overwritten as text.`, line);
+      if (!target) {
+        target = { id: "file_" + Date.now() + Math.random().toString(36).slice(2, 7), name: safeName, code: contents };
+        projectFiles.push(target);
+      } else {
+        target.code = contents;
+      }
+      if (target.id === activeFileId) editor.value = contents;
+      renderFileTabs(); updateLineNumbers(); updateCursorPos(); scheduleAutosave();
+      appendConsole(`Wrote ${contents.length} characters to ${safeName}`, "#86efac", false);
     },
     onError: (err) => handleError(err)
   });
@@ -2599,26 +2956,79 @@ document.getElementById("example-select").addEventListener("change", (e) => {
   if (code) {
     stopProject();
     editor.value = code;
+    const current = activeFile(); if (current) current.code = code;
     errorLineNumber = null;
     updateLineNumbers();
     updateCursorPos();
+    scheduleAutosave();
     runProject();
   }
 });
 
 document.getElementById("btn-download-crim").addEventListener("click", () => {
-  const blob = new Blob([editor.value], { type: "text/plain;charset=utf-8" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "project.crim";
-  a.click();
-  showToast("Exported project.crim");
+  const current = activeFile();
+  if (current?.kind === "image" && current.dataUrl) {
+    const a = document.createElement("a"); a.href = current.dataUrl; a.download = current.name; a.click();
+    showToast(`Exported ${current.name}`);
+    return;
+  }
+  if (current) current.code = editor.value;
+  downloadBlob(current?.name || "untitled.txt", editor.value);
+  showToast(`Exported ${current?.name || "project.crim"}`);
 });
+document.getElementById("btn-export-project").addEventListener("click", () => {
+  const current = activeFile(); if (current) current.code = editor.value;
+  downloadBlob("crim-project.crim", JSON.stringify({ format: "crim-studio-project", version: 2, files: projectFiles }, null, 2), "application/json");
+  showToast("Exported project bundle");
+});
+document.getElementById("btn-new-file").addEventListener("click", () => {
+  const suggested = `script${projectFiles.length + 1}.crim`;
+  const name = prompt("New filename (any extension is allowed)", suggested);
+  if (name !== null) addFile(name);
+});
+document.getElementById("btn-import-project").addEventListener("click", () => document.getElementById("project-import-input").click());
+document.getElementById("project-import-input").addEventListener("change", async e => {
+  const file = e.target.files?.[0]; if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    if (data.format !== "crim-studio-project" || !Array.isArray(data.files) || !data.files.length || data.files.some(f => typeof f.name !== "string" || (typeof f.code !== "string" && !(f.kind === "image" && typeof f.dataUrl === "string")))) throw new Error("Invalid project");
+    projectFiles = data.files.map((f, i) => ({ id: "import_" + Date.now() + "_" + i, name: f.name, code: f.code || "", ...(f.kind === "image" ? { kind: "image", dataUrl: f.dataUrl, mimeType: f.mimeType } : {}) }));
+    activeFileId = projectFiles[0].id; editor.value = projectFiles[0].code || ""; renderFileTabs(); switchFile(activeFileId); updateLineNumbers(); updateCursorPos(); scheduleAutosave(); showToast("Project opened");
+  } catch (_) { showToast("That is not a valid Crim+ Studio project"); }
+  e.target.value = "";
+});
+document.getElementById("btn-import-file").addEventListener("click", () => document.getElementById("file-import-input").click());
+document.getElementById("file-import-input").addEventListener("change", async e => {
+  const file = e.target.files?.[0]; if (!file) return;
+  try {
+    if (file.size > 5 * 1024 * 1024) throw new Error("File is too large for the text editor");
+    if (file.type.startsWith("image/")) {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      addFile(file.name, "", { kind: "image", dataUrl, mimeType: file.type });
+      showToast(`Imported image ${file.name}`);
+    } else {
+      const textContent = await file.text();
+      if (textContent.includes("\\u0000")) throw new Error("This binary format has no previewer yet");
+      addFile(file.name, textContent);
+      showToast(`Imported ${file.name}`);
+    }
+  }
+  catch (_) { showToast("Could not read that file"); }
+  e.target.value = "";
+});
+document.getElementById("btn-modules").addEventListener("click", () => { renderModuleList(); const m = document.getElementById("modules-modal"); m.classList.remove("hidden"); m.classList.add("flex"); });
+document.getElementById("btn-close-modules").addEventListener("click", () => { const m = document.getElementById("modules-modal"); m.classList.add("hidden"); m.classList.remove("flex"); });
+document.getElementById("modules-modal").addEventListener("click", e => { if (e.target.id === "modules-modal") document.getElementById("btn-close-modules").click(); });
 
 // Boot
 window.addEventListener("load", () => {
   renderAssetsGrid();
-  editor.value = EXAMPLES.catch_star;
+  if (!restoreProject()) { editor.value = EXAMPLES.catch_star; projectFiles[0].code = editor.value; renderFileTabs(); }
   updateLineNumbers();
   updateCursorPos();
 });
@@ -2629,9 +3039,86 @@ window.addEventListener("load", () => {
   document.getElementById("app-header").classList.remove("hidden");
   document.getElementById("app-main").classList.remove("hidden");
   document.getElementById("app-main").classList.add("flex");
+  renderFileTabs();
   updateLineNumbers();
   updateCursorPos();
+  scheduleAutosave();
 });
 </script>
+
+<script>
+(() => {
+  const main = document.getElementById('app-main');
+  const editorPane = document.getElementById('editor-pane');
+  const rightPane = document.getElementById('right-pane');
+  const stagePane = document.getElementById('stage-pane');
+  const workspaceBar = document.getElementById('workspace-splitter');
+  const stageBar = document.getElementById('stage-assets-splitter');
+  if (!main || !editorPane || !rightPane || !stagePane || !workspaceBar || !stageBar) return;
+  const storageKey = 'crim-studio-layout-v3';
+  const mobile = () => window.matchMedia('(max-width: 1023px)').matches;
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(storageKey) || '{}'); } catch (_) {}
+  if (Number.isFinite(saved.editor)) main.style.setProperty('--editor-pane-size', saved.editor + '%');
+  if (Number.isFinite(saved.editorMobile)) main.style.setProperty('--editor-pane-size-mobile', saved.editorMobile + '%');
+  if (Number.isFinite(saved.stage)) main.style.setProperty('--stage-pane-size', saved.stage + '%');
+  function persist() {
+    const current = {
+      editor: parseFloat(getComputedStyle(main).getPropertyValue('--editor-pane-size')) || 50,
+      editorMobile: parseFloat(getComputedStyle(main).getPropertyValue('--editor-pane-size-mobile')) || 50,
+      stage: parseFloat(getComputedStyle(main).getPropertyValue('--stage-pane-size')) || 60
+    };
+    try { localStorage.setItem(storageKey, JSON.stringify(current)); } catch (_) {}
+  }
+  function attach(bar, onMove) {
+    let pointer = null;
+    bar.addEventListener('pointerdown', e => {
+      if (e.button !== 0) return;
+      pointer = e.pointerId;
+      bar.classList.add('dragging');
+      document.body.classList.add('resizing-panels');
+      try { bar.setPointerCapture(pointer); } catch (_) {}
+      e.preventDefault();
+    });
+    bar.addEventListener('pointermove', e => { if (pointer === e.pointerId) onMove(e); });
+    const end = e => {
+      if (pointer !== e.pointerId) return;
+      pointer = null;
+      bar.classList.remove('dragging');
+      document.body.classList.remove('resizing-panels');
+      persist();
+    };
+    bar.addEventListener('pointerup', end);
+    bar.addEventListener('pointercancel', end);
+    bar.addEventListener('lostpointercapture', end);
+  }
+  attach(workspaceBar, e => {
+    const r = main.getBoundingClientRect();
+    const pct = mobile() ? (e.clientY-r.top)/r.height*100 : (e.clientX-r.left)/r.width*100;
+    main.style.setProperty(mobile() ? '--editor-pane-size-mobile' : '--editor-pane-size', Math.max(20,Math.min(80,pct)) + '%');
+  });
+  attach(stageBar, e => {
+    const r = rightPane.getBoundingClientRect();
+    const pct = (e.clientY-r.top)/r.height*100;
+    main.style.setProperty('--stage-pane-size', Math.max(18,Math.min(88,pct)) + '%');
+  });
+  function keyResize(bar, which) {
+    bar.addEventListener('keydown', e => {
+      const keys = ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'];
+      if (!keys.includes(e.key)) return;
+      e.preventDefault();
+      const step = e.shiftKey ? 5 : 2;
+      const prop = which === 'editor' ? (mobile() ? '--editor-pane-size-mobile' : '--editor-pane-size') : '--stage-pane-size';
+      const min = which === 'editor' ? 20 : 18, max = which === 'editor' ? 80 : 88;
+      let v = parseFloat(getComputedStyle(main).getPropertyValue(prop)) || (which === 'editor' ? 50 : 60);
+      v += (e.key === 'ArrowRight' || e.key === 'ArrowDown' ? step : -step);
+      main.style.setProperty(prop, Math.max(min,Math.min(max,v)) + '%');
+      persist();
+    });
+  }
+  keyResize(workspaceBar,'editor'); keyResize(stageBar,'stage');
+})();
+</script>
+
 </body>
 </html>
